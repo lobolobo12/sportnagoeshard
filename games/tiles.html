@@ -295,8 +295,12 @@
     }
     rows = rows.filter(r => { if (r.y > boardH) { r.el.remove(); return false; } return true; });
     // continuously spawn from top
-    const topY = Math.min(...rows.map(r => r.y));
-    if (topY > -rowH) spawnRowAt(topY - rowH);
+    if (rows.length > 0) {
+      const topY = Math.min(...rows.map(r => r.y));
+      if (topY > -rowH) spawnRowAt(topY - rowH);
+    } else {
+      spawnRowAt(-rowH);
+    }
     requestAnimationFrame(loop);
   }
 

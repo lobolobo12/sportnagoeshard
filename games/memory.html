@@ -336,7 +336,8 @@
       PADS.forEach(p => p.classList.remove('lit'));
       await new Promise(r => setTimeout(r, 120));
     }
-    const reached = sequence.length - 1;
+    // Round HUD displays sequence.length while playing — match it here
+    const reached = sequence.length;
     const best = getBest();
     const isNew = reached > best;
     if (isNew) setBest(reached);
