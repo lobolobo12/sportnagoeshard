@@ -106,10 +106,10 @@
     overflow: hidden;
   }
   .pad .glyph {
-    font-family: var(--f-brush);
-    font-size: 4rem;
+    font-family: var(--f-display);
+    font-size: 3.5rem;
     color: var(--paper);
-    opacity: 0.35;
+    opacity: 0.45;
     line-height: 1;
     transition: opacity 0.1s;
   }
@@ -196,7 +196,7 @@
 <div id="game">
   <div class="top">
     <div class="stat">
-      <span>第 · ROUND</span>
+      <span>ROUND</span>
       <span class="v round" id="round">1</span>
     </div>
     <div class="stat right">
@@ -205,13 +205,13 @@
     </div>
   </div>
 
-  <div class="status" id="status"><span class="kanji">始</span>TAP START</div>
+  <div class="status" id="status">TAP START</div>
 
   <div class="pad-grid" id="pads">
-    <div class="pad disabled" data-c="0"><span class="glyph">一</span></div>
-    <div class="pad disabled" data-c="1"><span class="glyph">二</span></div>
-    <div class="pad disabled" data-c="2"><span class="glyph">三</span></div>
-    <div class="pad disabled" data-c="3"><span class="glyph">四</span></div>
+    <div class="pad disabled" data-c="0"><span class="glyph">1</span></div>
+    <div class="pad disabled" data-c="1"><span class="glyph">2</span></div>
+    <div class="pad disabled" data-c="2"><span class="glyph">3</span></div>
+    <div class="pad disabled" data-c="3"><span class="glyph">4</span></div>
   </div>
 
   <div class="overlay" id="start-overlay">
@@ -286,11 +286,11 @@
   async function playSequence() {
     acceptingInput = false;
     PADS.forEach(p => p.classList.add('disabled'));
-    setStatus('watch', '見て · WATCH', '見');
+    setStatus('watch', 'WATCH');
     await new Promise(r => setTimeout(r, 600));
     const speed = Math.max(180, 500 - (sequence.length - 1) * 30);
     for (const idx of sequence) await lightPad(idx, speed);
-    setStatus('repeat', '番だ · YOUR TURN', '番');
+    setStatus('repeat', 'YOUR TURN');
     userIdx = 0;
     PADS.forEach(p => p.classList.remove('disabled'));
     acceptingInput = true;
@@ -326,7 +326,7 @@
     playing = false;
     acceptingInput = false;
     PADS.forEach(p => p.classList.add('disabled'));
-    setStatus('fail', 'WRONG · 失', '失');
+    setStatus('fail', 'WRONG');
     audio(120, 0.6, 0.18);
     setTimeout(() => audio(80, 0.5, 0.15), 200);
     vibrate([80, 60, 80, 60, 120]);

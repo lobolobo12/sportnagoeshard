@@ -157,11 +157,12 @@
     position: absolute;
     top: 32%; left: 50%;
     transform: translate(-50%, -50%) rotate(-8deg);
-    font-family: var(--f-brush);
-    font-size: clamp(6rem, 24vw, 10rem);
+    font-family: var(--f-display);
+    font-size: clamp(3rem, 14vw, 5.5rem);
+    letter-spacing: 0.08em;
     color: var(--stamp-red);
     border: 6px double var(--stamp-red);
-    padding: 10px 24px;
+    padding: 12px 28px;
     background: rgba(180,40,30,0.04);
     z-index: 10;
     pointer-events: none;
@@ -185,7 +186,7 @@
   <div id="board">
     <div class="floor-line"></div>
   </div>
-  <div class="fail-stamp" id="fail-stamp">失</div>
+  <div class="fail-stamp" id="fail-stamp">FAIL</div>
 
   <div class="overlay" id="start">
     <div class="title-jp">タイル · NO. 05</div>

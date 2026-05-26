@@ -62,19 +62,20 @@
   #stage.early  { background: var(--mustard); color: var(--ink); }
   #stage.result { background: var(--paper); }
 
-  .big-kanji {
-    font-family: var(--f-brush);
-    font-size: clamp(8rem, 32vw, 14rem);
-    line-height: 0.85;
-    margin: 0 0 12px;
-    color: currentColor;
-    opacity: 0.92;
-  }
-  .phase-en {
+  .big-phase {
     font-family: var(--f-display);
-    font-size: clamp(1.6rem, 7vw, 2.4rem);
-    letter-spacing: 0.04em;
+    font-size: clamp(4.5rem, 22vw, 9rem);
+    line-height: 0.9;
+    margin: 0 0 14px;
+    color: currentColor;
+    letter-spacing: -0.02em;
+  }
+  .phase-sub-en {
+    font-family: var(--f-display);
+    font-size: clamp(1.2rem, 5vw, 1.8rem);
+    letter-spacing: 0.12em;
     margin: 0 0 10px;
+    opacity: 0.85;
   }
   .phase-sub {
     font-family: var(--f-mono);
@@ -313,9 +314,9 @@
     phase = 'wait';
     stage.className = 'wait';
     content.innerHTML = `
-      <div class="big-kanji">待</div>
-      <div class="phase-en">WAIT</div>
-      <div class="phase-sub">DON'T TAP UNTIL 押</div>
+      <div class="big-phase">WAIT</div>
+      <div class="phase-sub-en">don't tap yet</div>
+      <div class="phase-sub">tap on green</div>
     `;
     const delay = 1200 + Math.random() * 3500;
     waitTimeout = setTimeout(() => {
@@ -323,9 +324,9 @@
       stage.className = 'go';
       goAt = performance.now();
       content.innerHTML = `
-        <div class="big-kanji">押</div>
-        <div class="phase-en">PUSH NOW</div>
-        <div class="phase-sub">GO · GO · GO</div>
+        <div class="big-phase">TAP!</div>
+        <div class="phase-sub-en">tap now</div>
+        <div class="phase-sub">go · go · go</div>
       `;
       audio(800, 0.06, 'square', 0.15);
       vibrate(20);
@@ -337,9 +338,8 @@
     phase = 'result';
     stage.className = 'early';
     content.innerHTML = `
-      <div class="big-kanji">早</div>
-      <div class="phase-en">TOO SOON</div>
-      <div class="phase-sub">PATIENCE, FRIEND</div>
+      <div class="big-phase">TOO SOON</div>
+      <div class="phase-sub-en">patience, friend</div>
       <div class="hint" style="margin-top: 28px;">TAP TO TRY AGAIN</div>
     `;
     audio(150, 0.3, 'sawtooth', 0.18);

@@ -233,13 +233,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: var(--f-brush);
-    font-size: 1.6rem;
+    font-family: var(--f-display);
+    font-size: 0.95rem;
+    letter-spacing: -0.02em;
     cursor: pointer;
     will-change: transform;
     box-shadow: 2px 2px 0 var(--ink);
     color: var(--paper);
   }
+  .target.epic { font-size: 0.78rem; }
+  .target.slow { font-size: 0.75rem; }
   .target.good { background: var(--good); }
   .target.rare { background: var(--rare); color: var(--ink); }
   .target.epic { background: var(--epic); animation: epic-pulse 0.6s infinite alternate; }
@@ -596,7 +599,7 @@
     <div class="hud-side">
       <span>SCORE · 点</span>
       <span class="v score" id="score">0</span>
-      <span class="level-tag" id="level-tag">第 1 面</span>
+      <span class="level-tag" id="level-tag">Lv 1</span>
     </div>
     <div class="hud-side right">
       <span>LIVES · 命</span>
@@ -617,13 +620,13 @@
     <div class="streak-badge hidden" id="streak-badge">連続 · <span class="num" id="streak-num">0</span> DAY STREAK</div>
 
     <div class="legend">
-      <div class="row"><span class="dot good"></span> +10 · 善</div>
-      <div class="row"><span class="dot rare"></span> +25 · 稀</div>
-      <div class="row"><span class="dot epic"></span> +100 · 神</div>
-      <div class="row"><span class="dot bomb"></span> AVOID · 禁</div>
-      <div class="row"><span class="dot slow"></span> SLOW · 遅</div>
-      <div class="row"><span class="dot mult"></span> 2X · 倍</div>
-      <div class="row"><span class="dot life"></span> +LIFE · 命</div>
+      <div class="row"><span class="dot good"></span> +10 PTS</div>
+      <div class="row"><span class="dot rare"></span> +25 PTS</div>
+      <div class="row"><span class="dot epic"></span> +100 PTS</div>
+      <div class="row"><span class="dot bomb"></span> BOMB · AVOID</div>
+      <div class="row"><span class="dot slow"></span> SLOW-MO</div>
+      <div class="row"><span class="dot mult"></span> 2X SCORE</div>
+      <div class="row"><span class="dot life"></span> +1 LIFE</div>
     </div>
 
     <div class="modes" id="modes">
@@ -824,13 +827,13 @@
     el.style.height = size + 'px';
     el.style.left = x + 'px';
     el.style.top = -size + 'px';
-    if (type === 'bomb') el.textContent = '禁';
-    else if (type === 'epic') el.textContent = '神';
-    else if (type === 'slow') el.textContent = '遅';
-    else if (type === 'mult') el.textContent = '倍';
-    else if (type === 'life') el.textContent = '命';
-    else if (type === 'rare') el.textContent = '稀';
-    else if (type === 'good') el.textContent = '善';
+    if (type === 'bomb') el.textContent = 'X';
+    else if (type === 'epic') el.textContent = '+100';
+    else if (type === 'slow') el.textContent = 'SLOW';
+    else if (type === 'mult') el.textContent = 'x2';
+    else if (type === 'life') el.textContent = '+1';
+    else if (type === 'rare') el.textContent = '+25';
+    else if (type === 'good') el.textContent = '+10';
 
     let baseSpeed = state.fallSpeed;
     if (type === 'epic') baseSpeed *= 1.6;
@@ -856,7 +859,7 @@
 
   function showCombo() {
     if (state.combo >= 3) {
-      comboEl.textContent = `x${comboMult()} · 連`;
+      comboEl.textContent = `x${comboMult()} COMBO`;
       comboEl.classList.add('show');
       clearTimeout(showCombo.t);
       showCombo.t = setTimeout(() => comboEl.classList.remove('show'), 800);
@@ -881,8 +884,8 @@
     const slowLeft = Math.max(0, state.slowmoUntil - t);
     const multLeft = Math.max(0, state.multUntil - t);
     let html = '';
-    if (slowLeft > 0) html += `<div class="buff slow">遅 ${(slowLeft/1000).toFixed(1)}s</div>`;
-    if (multLeft > 0) html += `<div class="buff mult">倍 ${(multLeft/1000).toFixed(1)}s</div>`;
+    if (slowLeft > 0) html += `<div class="buff slow">SLOW ${(slowLeft/1000).toFixed(1)}s</div>`;
+    if (multLeft > 0) html += `<div class="buff mult">x2 ${(multLeft/1000).toFixed(1)}s</div>`;
     buffsEl.innerHTML = html;
     slowmoOverlay.classList.toggle('active', slowLeft > 0);
   }
@@ -975,14 +978,14 @@
       audio(600, 0.4, 'sine', 0.1);
       vibrate(30);
       popup('SLOW-MO', target.x, target.y, 'var(--slow)');
-      showBanner('SLOW-MO', 'var(--slow)', '遅');
+      showBanner('SLOW-MO', 'var(--slow)');
     } else if (target.type === 'mult') {
       state.multUntil = now() + 10000;
       audio(700, 0.15, 'square', 0.12);
       audio(1000, 0.15, 'square', 0.12);
       vibrate(30);
       popup('x2 SCORE', target.x, target.y, 'var(--mult)');
-      showBanner('x2 SCORE', 'var(--mult)', '倍');
+      showBanner('x2 SCORE', 'var(--mult)');
     } else if (target.type === 'life') {
       if (state.mode !== 'zen') {
         state.lives = Math.min(5, state.lives + 1);
@@ -992,7 +995,7 @@
       audio(1200, 0.3, 'triangle', 0.12);
       vibrate([20, 30, 20]);
       popup('+1 LIFE', target.x, target.y, 'var(--life)');
-      showBanner('+1 LIFE', 'var(--life)', '命');
+      showBanner('+1 LIFE', 'var(--life)');
     } else {
       state.combo++;
       const baseMult = comboMult();
@@ -1019,8 +1022,8 @@
     const newLevel = Math.floor(state.score / 750) + 1;
     if (newLevel > state.level) {
       state.level = newLevel;
-      levelTagEl.textContent = `第 ${state.level} 面`;
-      showBanner(`LEVEL ${state.level}`, 'var(--mustard)', '面');
+      levelTagEl.textContent = `Lv ${state.level}`;
+      showBanner(`LEVEL ${state.level}`, 'var(--mustard)');
       audio(600, 0.15, 'square', 0.1);
       audio(900, 0.2, 'square', 0.1);
       vibrate([20, 30, 20, 30, 60]);
@@ -1062,7 +1065,7 @@
     if (state.elapsed < state.nextWaveAt) return;
     state.waveUntil = now() + 6000;
     state.nextWaveAt = state.elapsed + 35000;
-    showBanner('WAVE INCOMING', 'var(--bomb)', '波', 1000);
+    showBanner('WAVE INCOMING', 'var(--bomb)', '', 1000);
     waveVignette.classList.add('active');
     audio(200, 0.5, 'sawtooth', 0.15);
     setTimeout(() => audio(400, 0.4, 'sawtooth', 0.12), 200);
@@ -1166,7 +1169,7 @@
     state.milestonesShown = new Set();
     state.lastFrame = performance.now();
     scoreEl.textContent = '0';
-    levelTagEl.textContent = '第 1 面';
+    levelTagEl.textContent = 'Lv 1';
     updateLives();
     buffsEl.innerHTML = '';
     chaseEl.classList.remove('show', 'beat');
