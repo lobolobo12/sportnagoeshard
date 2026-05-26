@@ -18,6 +18,7 @@
     --slow: #b388ff;
     --mult: #ff4081;
     --life: #ff5252;
+    --wave: #ff6e40;
     --text: #ffffff;
     --muted: #888aa0;
     --hue: 0deg;
@@ -64,9 +65,42 @@
   .lives { font-size: 1.3rem; letter-spacing: 4px; color: var(--life); }
   .lives.infinite { color: var(--epic); font-size: 1.5rem; letter-spacing: 0; }
 
+  .chase {
+    position: absolute;
+    top: env(safe-area-inset-top, 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 8px;
+    background: rgba(255,234,0,0.12);
+    border: 1px solid var(--rare);
+    color: var(--rare);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    text-shadow: 0 0 8px var(--rare);
+    animation: chase-pulse 1.2s infinite alternate;
+  }
+  .chase.show { opacity: 1; }
+  .chase.beat {
+    background: rgba(0,229,255,0.15);
+    border-color: var(--epic);
+    color: var(--epic);
+    text-shadow: 0 0 12px var(--epic);
+  }
+  @keyframes chase-pulse {
+    from { box-shadow: 0 0 4px currentColor; }
+    to { box-shadow: 0 0 16px currentColor; }
+  }
+
   .combo {
     position: absolute;
-    top: 90px;
+    top: 110px;
     left: 50%;
     transform: translateX(-50%);
     font-size: 1rem;
@@ -82,7 +116,7 @@
 
   .buffs {
     position: absolute;
-    top: 90px;
+    top: 110px;
     right: 16px;
     display: flex;
     flex-direction: column;
@@ -99,16 +133,13 @@
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 1px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
   }
   .buff.slow { color: var(--slow); box-shadow: 0 0 12px rgba(179,136,255,0.4); }
   .buff.mult { color: var(--mult); box-shadow: 0 0 12px rgba(255,64,129,0.4); }
 
   .banner {
     position: absolute;
-    top: 40%;
+    top: 38%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0.5);
     font-size: 2.4rem;
@@ -121,10 +152,45 @@
     pointer-events: none;
     z-index: 15;
     transition: transform 0.3s, opacity 0.3s;
+    text-align: center;
+    white-space: nowrap;
   }
   .banner.show {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+  }
+
+  .achievement-stack {
+    position: absolute;
+    top: 80px;
+    left: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 16;
+    pointer-events: none;
+  }
+  .achievement {
+    background: linear-gradient(135deg, rgba(255,234,0,0.95), rgba(255,64,129,0.95));
+    color: #000;
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    box-shadow: 0 4px 20px rgba(255,234,0,0.5);
+    transform: translateX(-120%);
+    animation: ach-slide 3.5s forwards;
+    max-width: 240px;
+  }
+  .achievement .ach-title { display: block; font-size: 0.65rem; opacity: 0.7; font-weight: 600; margin-bottom: 2px; }
+  .achievement .ach-name { display: block; font-size: 0.95rem; }
+  @keyframes ach-slide {
+    0% { transform: translateX(-120%); }
+    8% { transform: translateX(0); }
+    85% { transform: translateX(0); opacity: 1; }
+    100% { transform: translateX(-120%); opacity: 0; }
   }
 
   .target {
@@ -197,6 +263,13 @@
     from { transform: scale(1); opacity: 1; }
     to { transform: scale(2.2); opacity: 0; }
   }
+  .target.near-miss-flash {
+    animation: nm-flash 0.4s;
+  }
+  @keyframes nm-flash {
+    0%,100% { box-shadow: 0 0 24px var(--bomb), inset 0 0 12px rgba(0,0,0,0.4); }
+    50% { box-shadow: 0 0 60px #fff, 0 0 80px var(--bomb), inset 0 0 12px rgba(0,0,0,0.4); }
+  }
 
   .popup {
     position: absolute;
@@ -207,9 +280,18 @@
     text-shadow: 0 2px 8px rgba(0,0,0,0.6);
     z-index: 5;
   }
+  .popup.big {
+    font-size: 1.6rem;
+    animation: float-up-big 1s ease-out forwards;
+  }
   @keyframes float-up {
     from { transform: translateY(0); opacity: 1; }
     to { transform: translateY(-60px); opacity: 0; }
+  }
+  @keyframes float-up-big {
+    0% { transform: translateY(0) scale(0.5); opacity: 0; }
+    20% { transform: translateY(-10px) scale(1.2); opacity: 1; }
+    100% { transform: translateY(-80px) scale(1); opacity: 0; }
   }
 
   .particle {
@@ -220,6 +302,21 @@
     pointer-events: none;
     z-index: 4;
     will-change: transform, opacity;
+  }
+
+  .wave-vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 7;
+    opacity: 0;
+    box-shadow: inset 0 0 80px 20px var(--wave);
+    transition: opacity 0.3s;
+  }
+  .wave-vignette.active { opacity: 1; animation: wave-throb 0.8s infinite alternate; }
+  @keyframes wave-throb {
+    from { box-shadow: inset 0 0 60px 10px var(--wave); }
+    to { box-shadow: inset 0 0 120px 30px var(--wave); }
   }
 
   .screen {
@@ -238,7 +335,7 @@
   }
   .screen.hidden { opacity: 0; pointer-events: none; }
   .title {
-    font-size: clamp(2.8rem, 13vw, 5rem);
+    font-size: clamp(2.6rem, 12vw, 4.6rem);
     font-weight: 900;
     letter-spacing: -2px;
     background: linear-gradient(135deg, var(--epic), var(--rare), var(--bomb));
@@ -251,17 +348,33 @@
   }
   .tagline {
     color: var(--muted);
-    margin: 12px 0 24px;
-    font-size: 0.9rem;
+    margin: 10px 0 18px;
+    font-size: 0.85rem;
     letter-spacing: 3px;
     text-transform: uppercase;
   }
+
+  .streak-badge {
+    background: linear-gradient(135deg, var(--bomb), var(--mult));
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    box-shadow: 0 0 20px rgba(255,23,68,0.4);
+  }
+  .streak-badge .num { font-size: 0.95rem; }
+  .streak-badge.hidden { display: none; }
+
   .legend {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px 20px;
-    margin: 0 0 20px;
-    font-size: 0.8rem;
+    gap: 6px 18px;
+    margin: 0 0 18px;
+    font-size: 0.78rem;
     color: var(--muted);
     max-width: 320px;
   }
@@ -278,7 +391,7 @@
   .modes {
     display: flex;
     gap: 8px;
-    margin: 0 0 20px;
+    margin: 0 0 12px;
     flex-wrap: wrap;
     justify-content: center;
   }
@@ -286,9 +399,9 @@
     background: transparent;
     color: var(--muted);
     border: 2px solid #2a2a44;
-    padding: 10px 18px;
+    padding: 8px 16px;
     border-radius: 30px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 700;
     cursor: pointer;
     letter-spacing: 1.5px;
@@ -303,8 +416,8 @@
   }
   .mode-desc {
     color: var(--muted);
-    font-size: 0.8rem;
-    margin-bottom: 24px;
+    font-size: 0.75rem;
+    margin-bottom: 18px;
     min-height: 1.2em;
     font-style: italic;
   }
@@ -313,9 +426,9 @@
     background: linear-gradient(135deg, var(--epic), var(--good));
     color: #000;
     border: none;
-    padding: 16px 44px;
+    padding: 14px 40px;
     border-radius: 60px;
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     font-weight: 900;
     cursor: pointer;
     letter-spacing: 2px;
@@ -327,30 +440,49 @@
 
   .stats-bar {
     display: flex;
-    gap: 16px;
-    margin-top: 20px;
+    gap: 14px;
+    margin-top: 16px;
     color: var(--muted);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     letter-spacing: 1.5px;
     text-transform: uppercase;
+    flex-wrap: wrap;
+    justify-content: center;
   }
   .stats-bar span { color: var(--text); font-weight: 700; }
 
+  .ach-count {
+    margin-top: 10px;
+    color: var(--rare);
+    font-size: 0.75rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  .ach-count:hover { text-decoration: underline; }
+
   .gameover-stats {
-    margin: 16px 0 24px;
+    margin: 14px 0 20px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     align-items: center;
   }
   .gameover-stats .stat-label { font-size: 0.7rem; color: var(--muted); letter-spacing: 2px; }
-  .gameover-stats .stat-value { font-size: 2.4rem; font-weight: 900; }
+  .gameover-stats .stat-value { font-size: 2.2rem; font-weight: 900; }
   .new-high {
     color: var(--rare);
     font-size: 0.85rem;
     letter-spacing: 3px;
     text-transform: uppercase;
     animation: pulse 0.8s infinite alternate;
+  }
+  .so-close {
+    color: var(--bomb);
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
   }
   @keyframes pulse {
     from { opacity: 0.6; }
@@ -377,11 +509,53 @@
     transition: opacity 0.3s;
   }
   .slowmo-overlay.active { opacity: 1; }
+
+  .ach-list-modal {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 20px;
+    overflow-y: auto;
+  }
+  .ach-list-modal.hidden { display: none; }
+  .ach-list-modal h2 {
+    color: var(--rare);
+    font-size: 1.4rem;
+    letter-spacing: 3px;
+    margin: 0 0 20px;
+  }
+  .ach-list-item {
+    width: 100%;
+    max-width: 360px;
+    padding: 10px 14px;
+    background: #1a1a2e;
+    border: 1px solid #2a2a44;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+  }
+  .ach-list-item.done { border-color: var(--rare); background: rgba(255,234,0,0.08); }
+  .ach-list-item .ach-mark { font-size: 1rem; }
+  .ach-list-item.done .ach-mark { color: var(--rare); }
+  .ach-list-item:not(.done) { opacity: 0.5; }
+  .ach-list-item:not(.done) .ach-mark::before { content: '○'; color: var(--muted); }
+  .ach-list-item.done .ach-mark::before { content: '★'; }
+  .ach-close {
+    margin-top: 16px;
+  }
 </style>
 </head>
 <body>
 <div id="game">
   <div class="slowmo-overlay" id="slowmo-overlay"></div>
+  <div class="wave-vignette" id="wave-vignette"></div>
 
   <div class="hud">
     <div class="hud-left">
@@ -394,13 +568,17 @@
       <div class="value lives" id="lives">♥♥♥</div>
     </div>
   </div>
+  <div class="chase" id="chase">— to beat best</div>
   <div class="combo" id="combo">x2 COMBO</div>
   <div class="buffs" id="buffs"></div>
   <div class="banner" id="banner"></div>
+  <div class="achievement-stack" id="ach-stack"></div>
 
   <div class="screen" id="start-screen">
     <h1 class="title">TAP<br/>HARD</h1>
     <div class="tagline">don't touch the bombs</div>
+
+    <div class="streak-badge hidden" id="streak-badge">🔥 <span class="num" id="streak-num">0</span> DAY STREAK</div>
 
     <div class="legend">
       <div class="row"><span class="dot good"></span> +10</div>
@@ -426,10 +604,11 @@
       <div>TAPS <span id="stat-taps">0</span></div>
       <div>RUNS <span id="stat-runs">0</span></div>
     </div>
+    <div class="ach-count" id="ach-count">★ 0 / 0 ACHIEVEMENTS</div>
   </div>
 
   <div class="screen hidden" id="gameover-screen">
-    <h1 class="title" style="font-size: clamp(1.8rem, 8vw, 3rem);">GAME<br/>OVER</h1>
+    <h1 class="title" style="font-size: clamp(1.6rem, 7vw, 2.6rem);">GAME<br/>OVER</h1>
     <div class="gameover-stats">
       <div>
         <div class="stat-label">Score</div>
@@ -441,12 +620,19 @@
       </div>
       <div>
         <div class="stat-label">Level Reached</div>
-        <div class="stat-value" id="final-level" style="color: var(--epic); font-size: 1.6rem;">1</div>
+        <div class="stat-value" id="final-level" style="color: var(--epic); font-size: 1.5rem;">1</div>
       </div>
       <div class="new-high hidden" id="new-high">NEW HIGH SCORE</div>
+      <div class="so-close hidden" id="so-close">SO CLOSE · <span id="so-close-diff"></span> AWAY</div>
     </div>
     <button class="btn" id="retry-btn">TRY AGAIN</button>
-    <button class="mode-btn" id="menu-btn" style="margin-top: 12px;">Menu</button>
+    <button class="mode-btn" id="menu-btn" style="margin-top: 10px;">Menu</button>
+  </div>
+
+  <div class="ach-list-modal hidden" id="ach-modal">
+    <h2>ACHIEVEMENTS</h2>
+    <div id="ach-list"></div>
+    <button class="btn ach-close" id="ach-close">CLOSE</button>
   </div>
 </div>
 
@@ -459,19 +645,30 @@
   const comboEl = document.getElementById('combo');
   const buffsEl = document.getElementById('buffs');
   const bannerEl = document.getElementById('banner');
+  const chaseEl = document.getElementById('chase');
+  const achStackEl = document.getElementById('ach-stack');
   const slowmoOverlay = document.getElementById('slowmo-overlay');
+  const waveVignette = document.getElementById('wave-vignette');
   const startScreen = document.getElementById('start-screen');
   const gameoverScreen = document.getElementById('gameover-screen');
   const finalScoreEl = document.getElementById('final-score');
   const bestScoreEl = document.getElementById('best-score');
   const finalLevelEl = document.getElementById('final-level');
   const newHighEl = document.getElementById('new-high');
+  const soCloseEl = document.getElementById('so-close');
+  const soCloseDiffEl = document.getElementById('so-close-diff');
   const startBtn = document.getElementById('start-btn');
   const retryBtn = document.getElementById('retry-btn');
   const menuBtn = document.getElementById('menu-btn');
   const statTapsEl = document.getElementById('stat-taps');
   const statRunsEl = document.getElementById('stat-runs');
   const statBestEl = document.getElementById('stat-best');
+  const streakBadge = document.getElementById('streak-badge');
+  const streakNumEl = document.getElementById('streak-num');
+  const achCountEl = document.getElementById('ach-count');
+  const achModal = document.getElementById('ach-modal');
+  const achListEl = document.getElementById('ach-list');
+  const achCloseBtn = document.getElementById('ach-close');
   const modesEl = document.getElementById('modes');
   const modeDescEl = document.getElementById('mode-desc');
 
@@ -481,10 +678,34 @@
     zen: 'No bombs. No death. Just vibes.'
   };
 
+  const ACHIEVEMENTS = [
+    { id: 'first_tap', name: 'First Blood', desc: 'Tap your first orb', check: s => s.totalTaps >= 1 },
+    { id: 'tap_100', name: 'Century', desc: 'Tap 100 orbs lifetime', check: s => s.totalTaps >= 100 },
+    { id: 'tap_500', name: 'Tap Goblin', desc: 'Tap 500 orbs lifetime', check: s => s.totalTaps >= 500 },
+    { id: 'tap_2000', name: 'Tap Demon', desc: 'Tap 2,000 orbs lifetime', check: s => s.totalTaps >= 2000 },
+    { id: 'combo_x3', name: 'Combo Starter', desc: 'Hit a x3 combo', check: s => s.maxComboMult >= 3 },
+    { id: 'combo_x5', name: 'Combo King', desc: 'Hit a x5 combo', check: s => s.maxComboMult >= 5 },
+    { id: 'lvl_3', name: 'Warmed Up', desc: 'Reach Level 3', check: s => s.maxLevel >= 3 },
+    { id: 'lvl_5', name: 'In The Zone', desc: 'Reach Level 5', check: s => s.maxLevel >= 5 },
+    { id: 'lvl_8', name: 'Locked In', desc: 'Reach Level 8', check: s => s.maxLevel >= 8 },
+    { id: 'score_500', name: '500 Club', desc: 'Score 500 in one run', check: s => s.best >= 500 },
+    { id: 'score_2000', name: 'Cracked', desc: 'Score 2,000 in one run', check: s => s.best >= 2000 },
+    { id: 'score_5000', name: 'Unhinged', desc: 'Score 5,000 in one run', check: s => s.best >= 5000 },
+    { id: 'near_miss_5', name: 'Living Dangerously', desc: 'Survive 5 near-misses (one run)', check: s => s.runNearMisses >= 5 },
+    { id: 'no_bombs', name: 'Pacifist', desc: 'Finish a run without touching a bomb', check: s => s.runCompletedNoBombs === true },
+    { id: 'epic_3', name: 'Star Collector', desc: 'Tap 3 epic orbs in one run', check: s => s.runEpicTaps >= 3 },
+    { id: 'streak_3', name: 'On A Roll', desc: '3-day play streak', check: s => s.dailyStreak >= 3 },
+    { id: 'streak_7', name: 'Hooked', desc: '7-day play streak', check: s => s.dailyStreak >= 7 },
+    { id: 'hardcore_win', name: 'Hardcore Hero', desc: 'Score 250+ in Hardcore', check: s => s.bestHardcore >= 250 },
+    { id: 'zen_10k', name: 'Inner Peace', desc: 'Score 10,000 in Zen', check: s => s.bestZen >= 10000 },
+    { id: 'wave_survive', name: 'Wave Rider', desc: 'Survive 3 waves in one run', check: s => s.runWavesSurvived >= 3 },
+  ];
+
   const state = {
     running: false,
     mode: 'classic',
     score: 0,
+    displayScore: 0,
     lives: 3,
     level: 1,
     combo: 0,
@@ -497,8 +718,20 @@
     fallSpeed: 0.12,
     slowmoUntil: 0,
     multUntil: 0,
+    waveUntil: 0,
+    nextWaveAt: 35000,
+    lastTapX: -999,
+    lastTapY: -999,
+    lastTapTime: 0,
+    runNearMisses: 0,
+    runEpicTaps: 0,
+    runBombsTouched: 0,
+    runWavesSurvived: 0,
+    maxComboMultThisRun: 1,
+    milestonesShown: new Set(),
   };
 
+  const MILESTONES = [100, 250, 500, 1000, 2000, 3500, 5000, 7500, 10000];
   const TARGET_SIZE = 64;
 
   function rand(min, max) { return Math.random() * (max - min) + min; }
@@ -531,6 +764,43 @@
     })[type];
   }
 
+  // ---------- persistence helpers ----------
+  function lsGet(k, fallback) {
+    const v = localStorage.getItem(k);
+    return v === null ? fallback : v;
+  }
+  function lsSetN(k, n) { localStorage.setItem(k, String(n)); }
+  function lsGetN(k) { return +(lsGet(k, 0)); }
+
+  function getUnlockedSet() {
+    try { return new Set(JSON.parse(lsGet('taphard_ach', '[]'))); } catch(e) { return new Set(); }
+  }
+  function saveUnlockedSet(s) {
+    localStorage.setItem('taphard_ach', JSON.stringify([...s]));
+  }
+
+  function getDailyStreak() {
+    const last = lsGet('taphard_last_day', null);
+    const streak = lsGetN('taphard_streak');
+    if (!last) return 0;
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    if (last === today || last === yesterday) return streak;
+    return 0;
+  }
+  function markPlayedToday() {
+    const today = new Date().toDateString();
+    const last = lsGet('taphard_last_day', null);
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    if (last === today) return;
+    let streak = lsGetN('taphard_streak');
+    if (last === yesterday) streak += 1;
+    else streak = 1;
+    localStorage.setItem('taphard_last_day', today);
+    lsSetN('taphard_streak', streak);
+  }
+
+  // ---------- particles ----------
   function spawnParticles(x, y, color, count=8) {
     for (let i = 0; i < count; i++) {
       const el = document.createElement('div');
@@ -541,23 +811,26 @@
       el.style.top = y + 'px';
       const angle = (Math.PI * 2 * i) / count + rand(-0.3, 0.3);
       const speed = rand(0.15, 0.35);
-      const p = {
+      game.appendChild(el);
+      state.particles.push({
         el, x, y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         life: 500,
         born: now()
-      };
-      game.appendChild(el);
-      state.particles.push(p);
+      });
     }
   }
 
-  function spawnTarget() {
+  // ---------- targets ----------
+  function spawnTarget(forceType=null) {
     const roll = Math.random();
     const noBombs = state.mode === 'zen';
     let type, points;
-    if (!noBombs && roll < 0.10) { type = 'bomb'; points = 0; }
+    if (forceType) {
+      type = forceType;
+      points = type === 'epic' ? 100 : type === 'rare' ? 25 : type === 'good' ? 10 : 0;
+    } else if (!noBombs && roll < 0.10) { type = 'bomb'; points = 0; }
     else if (roll < 0.13) { type = 'slow'; points = 0; }
     else if (roll < 0.16) { type = 'mult'; points = 0; }
     else if (roll < 0.175 && state.mode !== 'zen') { type = 'life'; points = 0; }
@@ -584,7 +857,7 @@
     else if (type === 'rare') baseSpeed *= 1.25;
     else if (type === 'life' || type === 'mult' || type === 'slow') baseSpeed *= 1.1;
 
-    const target = { el, type, points, x, y: -size, size, speed: baseSpeed, alive: true };
+    const target = { el, type, points, x, y: -size, size, speed: baseSpeed, alive: true, checkedNearMiss: false };
     el.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       onTap(target);
@@ -593,15 +866,15 @@
     state.targets.push(target);
   }
 
-  function popup(text, x, y, color) {
+  function popup(text, x, y, color, big=false) {
     const el = document.createElement('div');
-    el.className = 'popup';
+    el.className = 'popup' + (big ? ' big' : '');
     el.textContent = text;
     el.style.left = x + 'px';
     el.style.top = y + 'px';
     el.style.color = color;
     game.appendChild(el);
-    setTimeout(() => el.remove(), 700);
+    setTimeout(() => el.remove(), big ? 1000 : 700);
   }
 
   function showCombo() {
@@ -612,18 +885,17 @@
       showCombo.t = setTimeout(() => comboEl.classList.remove('show'), 800);
     }
   }
-
   function comboMult() {
     if (state.combo < 3) return 1;
     return Math.min(5, Math.floor(state.combo / 3) + 1);
   }
 
-  function showBanner(text, color) {
+  function showBanner(text, color, dur=1100) {
     bannerEl.textContent = text;
     bannerEl.style.color = color || 'var(--epic)';
     bannerEl.classList.add('show');
     clearTimeout(showBanner.t);
-    showBanner.t = setTimeout(() => bannerEl.classList.remove('show'), 1100);
+    showBanner.t = setTimeout(() => bannerEl.classList.remove('show'), dur);
   }
 
   function updateBuffs() {
@@ -637,6 +909,72 @@
     slowmoOverlay.classList.toggle('active', slowLeft > 0);
   }
 
+  function updateChase() {
+    const best = lsGetN(bestKey());
+    if (best <= 0) { chaseEl.classList.remove('show'); return; }
+    const diff = best - state.score;
+    if (diff <= 0) {
+      chaseEl.textContent = `+${state.score - best} OVER BEST`;
+      chaseEl.classList.add('show', 'beat');
+    } else if (diff <= 500) {
+      chaseEl.textContent = `${diff} TO BEAT BEST`;
+      chaseEl.classList.add('show');
+      chaseEl.classList.remove('beat');
+    } else {
+      chaseEl.classList.remove('show');
+    }
+  }
+
+  // ---------- achievements ----------
+  function getAchievementState() {
+    return {
+      totalTaps: lsGetN('taphard_taps'),
+      maxComboMult: lsGetN('taphard_max_combo_mult'),
+      maxLevel: lsGetN('taphard_max_level'),
+      best: lsGetN('taphard_best'),
+      bestHardcore: lsGetN('taphard_best_hardcore'),
+      bestZen: lsGetN('taphard_best_zen'),
+      dailyStreak: getDailyStreak(),
+      runNearMisses: state.runNearMisses,
+      runEpicTaps: state.runEpicTaps,
+      runWavesSurvived: state.runWavesSurvived,
+      runCompletedNoBombs: state.runBombsTouched === 0 && !state.running && state.score > 100,
+    };
+  }
+
+  function checkAchievements() {
+    const unlocked = getUnlockedSet();
+    const s = getAchievementState();
+    for (const a of ACHIEVEMENTS) {
+      if (unlocked.has(a.id)) continue;
+      try {
+        if (a.check(s)) {
+          unlocked.add(a.id);
+          showAchievement(a);
+        }
+      } catch(e) {}
+    }
+    saveUnlockedSet(unlocked);
+  }
+
+  function showAchievement(a) {
+    const el = document.createElement('div');
+    el.className = 'achievement';
+    el.innerHTML = `<span class="ach-title">★ Achievement Unlocked</span><span class="ach-name">${a.name}</span>`;
+    achStackEl.appendChild(el);
+    audioBeep(1000, 0.1, 'square', 0.1);
+    audioBeep(1400, 0.15, 'square', 0.1);
+    vibrate([30, 40, 30]);
+    setTimeout(() => el.remove(), 3500);
+  }
+
+  function bestKey() {
+    return state.mode === 'hardcore' ? 'taphard_best_hardcore'
+      : state.mode === 'zen' ? 'taphard_best_zen'
+      : 'taphard_best';
+  }
+
+  // ---------- core tap ----------
   function onTap(target) {
     if (!target.alive || !state.running) return;
     target.alive = false;
@@ -644,12 +982,16 @@
     setTimeout(() => target.el.remove(), 300);
 
     incTaps();
+    state.lastTapX = target.x + target.size / 2;
+    state.lastTapY = target.y + target.size / 2;
+    state.lastTapTime = now();
 
     const cx = target.x + target.size / 2;
     const cy = target.y + target.size / 2;
     const col = colorOf(target.type);
 
     if (target.type === 'bomb') {
+      state.runBombsTouched++;
       loseLife();
       state.combo = 0;
       audioBeep(120, 0.3, 'sawtooth', 0.2);
@@ -692,7 +1034,9 @@
       const totalMult = baseMult * scoreMult;
       const gained = target.points * totalMult;
       state.score += gained;
-      scoreEl.textContent = state.score;
+      state.maxComboMultThisRun = Math.max(state.maxComboMultThisRun, baseMult);
+      if (target.type === 'epic') state.runEpicTaps++;
+      lsSetN('taphard_max_combo_mult', Math.max(lsGetN('taphard_max_combo_mult'), baseMult));
       const freq = target.type === 'epic' ? 1200 : target.type === 'rare' ? 800 : 600;
       audioBeep(freq, 0.1, 'sine', 0.08);
       vibrate(15);
@@ -700,6 +1044,8 @@
       spawnParticles(cx, cy, col, target.type === 'epic' ? 12 : 6);
       showCombo();
       checkLevelUp();
+      checkMilestones();
+      checkAchievements();
     }
   }
 
@@ -713,6 +1059,18 @@
       audioBeep(600, 0.15, 'square', 0.1);
       audioBeep(900, 0.2, 'square', 0.1);
       vibrate([20, 30, 20, 30, 60]);
+      lsSetN('taphard_max_level', Math.max(lsGetN('taphard_max_level'), state.level));
+    }
+  }
+
+  function checkMilestones() {
+    for (const m of MILESTONES) {
+      if (state.score >= m && !state.milestonesShown.has(m)) {
+        state.milestonesShown.add(m);
+        popup(`${m}!`, window.innerWidth / 2 - 30, window.innerHeight / 2, 'var(--epic)', true);
+        audioBeep(1200, 0.15, 'square', 0.12);
+        vibrate(50);
+      }
     }
   }
 
@@ -721,8 +1079,9 @@
       livesEl.className = 'value lives infinite';
       livesEl.textContent = '∞';
     } else {
+      const max = state.mode === 'hardcore' ? 1 : 3;
       livesEl.className = 'value lives';
-      livesEl.textContent = '♥'.repeat(Math.max(0, state.lives)) + '·'.repeat(Math.max(0, 3 - state.lives));
+      livesEl.textContent = '♥'.repeat(Math.max(0, state.lives)) + '·'.repeat(Math.max(0, max - state.lives));
     }
   }
 
@@ -733,6 +1092,25 @@
     if (state.lives <= 0) gameOver();
   }
 
+  // ---------- waves ----------
+  function maybeStartWave() {
+    if (state.mode === 'zen') return;
+    if (state.elapsed < state.nextWaveAt) return;
+    state.waveUntil = now() + 6000;
+    state.nextWaveAt = state.elapsed + 35000;
+    showBanner('WAVE INCOMING', 'var(--wave)', 1000);
+    waveVignette.classList.add('active');
+    audioBeep(200, 0.5, 'sawtooth', 0.15);
+    setTimeout(() => audioBeep(400, 0.4, 'sawtooth', 0.12), 200);
+    vibrate([80, 60, 80, 60, 120]);
+    setTimeout(() => {
+      waveVignette.classList.remove('active');
+      state.runWavesSurvived++;
+      checkAchievements();
+    }, 6000);
+  }
+
+  // ---------- loop ----------
   function loop(t) {
     if (!state.running) return;
     const dt = Math.min(50, t - state.lastFrame);
@@ -740,9 +1118,12 @@
     state.elapsed += dt;
 
     const slowFactor = now() < state.slowmoUntil ? 0.35 : 1;
+    const inWave = now() < state.waveUntil;
 
     state.fallSpeed = 0.12 + (state.elapsed / 1000) * 0.006;
-    state.spawnInterval = Math.max(280, 900 - state.elapsed * 0.08);
+    let interval = Math.max(280, 900 - state.elapsed * 0.08);
+    if (inWave) interval *= 0.5;
+    state.spawnInterval = interval;
 
     state.spawnTimer += dt * slowFactor;
     if (state.spawnTimer >= state.spawnInterval) {
@@ -750,11 +1131,33 @@
       spawnTarget();
     }
 
+    maybeStartWave();
+
     const h = window.innerHeight;
     for (const tgt of state.targets) {
       if (!tgt.alive) continue;
       tgt.y += tgt.speed * dt * slowFactor;
       tgt.el.style.top = tgt.y + 'px';
+
+      // near-miss detection for bombs
+      if (tgt.type === 'bomb' && !tgt.checkedNearMiss) {
+        const cx = tgt.x + tgt.size / 2;
+        const cy = tgt.y + tgt.size / 2;
+        const tapAge = now() - state.lastTapTime;
+        const dx = cx - state.lastTapX;
+        const dy = cy - state.lastTapY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (tapAge < 400 && dist < 90) {
+          tgt.checkedNearMiss = true;
+          tgt.el.classList.add('near-miss-flash');
+          state.runNearMisses++;
+          popup('CLOSE!', tgt.x, tgt.y, '#fff');
+          audioBeep(1500, 0.05, 'square', 0.06);
+          vibrate(10);
+          checkAchievements();
+        }
+      }
+
       if (tgt.y > h) {
         tgt.alive = false;
         tgt.el.remove();
@@ -767,6 +1170,14 @@
       }
     }
     state.targets = state.targets.filter(t => t.alive);
+
+    // animate display score toward real score
+    if (state.displayScore !== state.score) {
+      const diff = state.score - state.displayScore;
+      const step = Math.max(1, Math.ceil(diff / 6));
+      state.displayScore = Math.min(state.score, state.displayScore + step);
+      scoreEl.textContent = state.displayScore;
+    }
 
     const tNow = now();
     for (const p of state.particles) {
@@ -781,13 +1192,17 @@
     state.particles = state.particles.filter(p => !p.dead);
 
     updateBuffs();
+    updateChase();
 
     requestAnimationFrame(loop);
   }
 
+  // ---------- lifecycle ----------
   function start() {
+    markPlayedToday();
     state.running = true;
     state.score = 0;
+    state.displayScore = 0;
     state.lives = state.mode === 'hardcore' ? 1 : 3;
     state.level = 1;
     state.combo = 0;
@@ -801,13 +1216,23 @@
     state.fallSpeed = 0.12;
     state.slowmoUntil = 0;
     state.multUntil = 0;
+    state.waveUntil = 0;
+    state.nextWaveAt = 35000;
+    state.runNearMisses = 0;
+    state.runEpicTaps = 0;
+    state.runBombsTouched = 0;
+    state.runWavesSurvived = 0;
+    state.maxComboMultThisRun = 1;
+    state.milestonesShown = new Set();
     state.lastFrame = performance.now();
     document.documentElement.style.setProperty('--hue', '0deg');
     scoreEl.textContent = '0';
     levelTagEl.textContent = 'Lv 1';
     updateLives();
     buffsEl.innerHTML = '';
+    chaseEl.classList.remove('show', 'beat');
     incRuns();
+    checkAchievements();
     startScreen.classList.add('hidden');
     gameoverScreen.classList.add('hidden');
     requestAnimationFrame(loop);
@@ -819,17 +1244,32 @@
     state.targets = [];
     state.particles.forEach(p => p.el.remove());
     state.particles = [];
-    const best = +(localStorage.getItem('taphard_best') || 0);
+    waveVignette.classList.remove('active');
+
+    const key = bestKey();
+    const best = lsGetN(key);
     const isNew = state.score > best;
-    if (isNew) localStorage.setItem('taphard_best', state.score);
+    if (isNew) lsSetN(key, state.score);
+
     finalScoreEl.textContent = state.score;
     bestScoreEl.textContent = isNew ? state.score : best;
     finalLevelEl.textContent = state.level;
     newHighEl.classList.toggle('hidden', !isNew);
+
+    const diff = best - state.score;
+    if (!isNew && best > 0 && diff > 0 && diff <= Math.max(50, best * 0.1)) {
+      soCloseDiffEl.textContent = diff;
+      soCloseEl.classList.remove('hidden');
+    } else {
+      soCloseEl.classList.add('hidden');
+    }
+
     gameoverScreen.classList.remove('hidden');
     audioBeep(300, 0.2, 'sawtooth', 0.15);
     setTimeout(() => audioBeep(150, 0.4, 'sawtooth', 0.15), 150);
     vibrate([100, 50, 100, 50, 200]);
+
+    checkAchievements();
     refreshStats();
   }
 
@@ -839,6 +1279,7 @@
     state.targets = [];
     state.particles.forEach(p => p.el.remove());
     state.particles = [];
+    waveVignette.classList.remove('active');
     gameoverScreen.classList.add('hidden');
     startScreen.classList.remove('hidden');
     document.documentElement.style.setProperty('--hue', '0deg');
@@ -846,17 +1287,40 @@
   }
 
   function incTaps() {
-    const n = +(localStorage.getItem('taphard_taps') || 0) + 1;
-    localStorage.setItem('taphard_taps', n);
+    const n = lsGetN('taphard_taps') + 1;
+    lsSetN('taphard_taps', n);
   }
   function incRuns() {
-    const n = +(localStorage.getItem('taphard_runs') || 0) + 1;
-    localStorage.setItem('taphard_runs', n);
+    const n = lsGetN('taphard_runs') + 1;
+    lsSetN('taphard_runs', n);
   }
   function refreshStats() {
-    statBestEl.textContent = localStorage.getItem('taphard_best') || '0';
-    statTapsEl.textContent = localStorage.getItem('taphard_taps') || '0';
-    statRunsEl.textContent = localStorage.getItem('taphard_runs') || '0';
+    statBestEl.textContent = lsGetN('taphard_best');
+    statTapsEl.textContent = lsGetN('taphard_taps');
+    statRunsEl.textContent = lsGetN('taphard_runs');
+    const streak = getDailyStreak();
+    if (streak > 0) {
+      streakBadge.classList.remove('hidden');
+      streakNumEl.textContent = streak;
+    } else {
+      streakBadge.classList.add('hidden');
+    }
+    const unlocked = getUnlockedSet();
+    achCountEl.textContent = `★ ${unlocked.size} / ${ACHIEVEMENTS.length} ACHIEVEMENTS`;
+  }
+
+  function openAchievements() {
+    const unlocked = getUnlockedSet();
+    achListEl.innerHTML = ACHIEVEMENTS.map(a => `
+      <div class="ach-list-item ${unlocked.has(a.id) ? 'done' : ''}">
+        <div>
+          <div style="font-weight:800;">${a.name}</div>
+          <div style="font-size:0.75rem; color: var(--muted);">${a.desc}</div>
+        </div>
+        <div class="ach-mark"></div>
+      </div>
+    `).join('');
+    achModal.classList.remove('hidden');
   }
 
   modesEl.addEventListener('click', (e) => {
@@ -870,6 +1334,8 @@
   startBtn.addEventListener('click', start);
   retryBtn.addEventListener('click', start);
   menuBtn.addEventListener('click', backToMenu);
+  achCountEl.addEventListener('click', openAchievements);
+  achCloseBtn.addEventListener('click', () => achModal.classList.add('hidden'));
 
   refreshStats();
 })();
