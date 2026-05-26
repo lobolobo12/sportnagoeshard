@@ -586,7 +586,7 @@
 
     <div class="marquee-meta">
       <span>EST. 2026</span>
-      <span class="corners">10 CABINETS</span>
+      <span class="corners">11 CABINETS</span>
       <span>TOKYO · ∞</span>
     </div>
   </header>
@@ -599,7 +599,7 @@
 
   <div class="section-label">
     <span>CABINETS · <span class="ja">筐体</span></span>
-    <span class="count">10 / 11</span>
+    <span class="count">11 / 12</span>
   </div>
 
   <div class="cabinets">
@@ -854,9 +854,34 @@
       </div>
     </a>
 
-    <div class="ticket soon">
+    <a href="games/pong.html" class="ticket">
       <div class="stub">
         <div class="no">№ 11</div>
+        <div class="glyph">球</div>
+        <div class="mini">TAMA</div>
+      </div>
+      <div class="body">
+        <div class="row1">
+          <div class="name-block">
+            <div class="name-jp">ピンポン · 2P</div>
+            <h3 class="name-en">PONG</h3>
+          </div>
+          <div class="price">
+            ROUNDS
+            <span class="v" id="best-pong">—</span>
+          </div>
+        </div>
+        <div class="desc">two players · one phone · first to 5 wins.</div>
+        <div class="row2">
+          <span class="tag">¥10 · HOT-SEAT</span>
+          <span class="play">PLAY</span>
+        </div>
+      </div>
+    </a>
+
+    <div class="ticket soon">
+      <div class="stub">
+        <div class="no">№ 12</div>
         <div class="glyph">？</div>
       </div>
       <div class="body">
@@ -866,7 +891,7 @@
             <h3 class="name-en" style="color: var(--faded);">COMING SOON</h3>
           </div>
         </div>
-        <div class="desc" style="color: var(--faded-2);">pong · aim trainer · drift · or whatever else.</div>
+        <div class="desc" style="color: var(--faded-2);">tic-tac-toe · aim trainer · drift · or whatever else.</div>
         <div class="row2">
           <span class="tag">OUT OF ORDER</span>
         </div>
@@ -944,12 +969,13 @@
   setBest('best-whack',    lsGetN('whack_best'));
   setBest('best-numbers',  lsGetN('numbers_best'));
   setBest('best-breakout', lsGetN('breakout_best'));
+  setBest('best-pong',     lsGetN('pong_best'));
 
   const totalRuns =
     lsGetN('taphard_runs') + lsGetN('react_runs') + lsGetN('memory_runs') +
     lsGetN('snake_runs') + lsGetN('tiles_runs') + lsGetN('stack_runs') +
     lsGetN('flappy_runs') + lsGetN('whack_runs') + lsGetN('numbers_runs') +
-    lsGetN('breakout_runs');
+    lsGetN('breakout_runs') + lsGetN('pong_runs');
   document.getElementById('lt-runs').textContent = String(totalRuns).padStart(3, '0');
 
   const totalTaps = lsGetN('taphard_taps');
