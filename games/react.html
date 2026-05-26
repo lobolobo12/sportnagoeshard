@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0a0a14" />
+<title>REACT</title>
+<style>
+  :root {
+    --bg: #0a0a14;
+    --wait: #ff1744;
+    --go: #00e676;
+    --early: #ff6e40;
+    --text: #ffffff;
+    --muted: #888aa0;
+    --accent: #00e5ff;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overscroll-behavior: none;
+  }
+  body { position: fixed; inset: 0; }
+
+  #stage {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    transition: background 0.15s;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+  }
+  #stage.idle { background: radial-gradient(ellipse at top, #1a1a3a 0%, #0a0a14 60%, #000 100%); }
+  #stage.wait { background: radial-gradient(circle at center, #6e0024 0%, var(--wait) 80%); }
+  #stage.go { background: radial-gradient(circle at center, #66ffa6 0%, var(--go) 80%); animation: go-pulse 0.4s infinite alternate; }
+  #stage.early { background: radial-gradient(circle at center, #ffab40 0%, var(--early) 80%); }
+  #stage.result { background: radial-gradient(ellipse at top, #1a1a3a 0%, #0a0a14 60%, #000 100%); }
+
+  @keyframes go-pulse {
+    from { filter: brightness(1); }
+    to { filter: brightness(1.15); }
+  }
+
+  .big {
+    font-size: clamp(3rem, 14vw, 5.5rem);
+    font-weight: 900;
+    letter-spacing: -2px;
+    line-height: 0.9;
+    margin: 0 0 8px;
+  }
+  .sub {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  #stage.idle .big {
+    background: linear-gradient(135deg, var(--accent), var(--go));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  #stage.idle .sub { color: var(--muted); }
+
+  .ms {
+    font-size: clamp(3.5rem, 18vw, 6rem);
+    font-weight: 900;
+    margin: 0;
+    color: var(--accent);
+    line-height: 1;
+    text-shadow: 0 0 30px currentColor;
+  }
+  .ms-label { color: var(--muted); font-size: 0.8rem; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 14px; }
+
+  .ranking {
+    margin: 18px 0 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .rank-godlike { color: #b388ff; text-shadow: 0 0 12px currentColor; }
+  .rank-amazing { color: var(--accent); text-shadow: 0 0 12px currentColor; }
+  .rank-great { color: var(--go); }
+  .rank-okay { color: #ffea00; }
+  .rank-slow { color: var(--early); }
+  .rank-asleep { color: var(--wait); }
+
+  .stats {
+    margin-top: 18px;
+    display: flex;
+    gap: 22px;
+    color: var(--muted);
+    font-size: 0.78rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .stats span { color: var(--text); font-weight: 800; display: block; font-size: 1.05rem; margin-top: 2px; }
+
+  .hint {
+    margin-top: 28px;
+    color: rgba(255,255,255,0.7);
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: hint-pulse 1.2s infinite alternate;
+  }
+  @keyframes hint-pulse { from { opacity: 0.5; } to { opacity: 1; } }
+
+  .back-btn {
+    position: absolute;
+    top: env(safe-area-inset-top, 12px);
+    left: 12px;
+    background: rgba(0,0,0,0.6);
+    color: var(--muted);
+    border: 1px solid #2a2a44;
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    z-index: 5;
+  }
+  .recent {
+    margin-top: 14px;
+    display: flex;
+    gap: 8px;
+  }
+  .recent-pill {
+    background: rgba(255,255,255,0.08);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .recent-pill.best { color: var(--accent); background: rgba(0,229,255,0.15); border: 1px solid var(--accent); }
+</style>
+</head>
+<body>
+<div id="stage" class="idle">
+  <a href="../index.html" class="back-btn">← Hub</a>
+  <div id="content"></div>
+</div>
+
+<script>
+(() => {
+  const stage = document.getElementById('stage');
+  const content = document.getElementById('content');
+
+  const RANKS = [
+    { max: 180, label: 'GODLIKE', cls: 'rank-godlike' },
+    { max: 220, label: 'AMAZING', cls: 'rank-amazing' },
+    { max: 280, label: 'GREAT', cls: 'rank-great' },
+    { max: 360, label: 'NOT BAD', cls: 'rank-okay' },
+    { max: 500, label: 'SLOW', cls: 'rank-slow' },
+    { max: Infinity, label: 'WERE U ASLEEP', cls: 'rank-asleep' },
+  ];
+
+  function getRank(ms) {
+    return RANKS.find(r => ms <= r.max);
+  }
+
+  function audioBeep(freq, duration, type='sine', vol=0.12) {
+    try {
+      const ctx = audioBeep.ctx || (audioBeep.ctx = new (window.AudioContext || window.webkitAudioContext)());
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    } catch(e) {}
+  }
+  function vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
+
+  function getRecent() {
+    try { return JSON.parse(localStorage.getItem('react_recent') || '[]'); } catch(e) { return []; }
+  }
+  function pushRecent(ms) {
+    const r = getRecent();
+    r.unshift(ms);
+    while (r.length > 5) r.pop();
+    localStorage.setItem('react_recent', JSON.stringify(r));
+  }
+  function getBest() { return +(localStorage.getItem('react_best') || 0); }
+  function setBest(ms) { localStorage.setItem('react_best', String(ms)); }
+  function getAvg() {
+    const r = getRecent();
+    if (!r.length) return 0;
+    return Math.round(r.reduce((a,b)=>a+b,0) / r.length);
+  }
+  function incRuns() {
+    const n = +(localStorage.getItem('react_runs') || 0) + 1;
+    localStorage.setItem('react_runs', String(n));
+    return n;
+  }
+
+  let phase = 'idle';
+  let waitTimeout = null;
+  let goAt = 0;
+
+  function renderIdle() {
+    phase = 'idle';
+    stage.className = 'idle';
+    const best = getBest();
+    const avg = getAvg();
+    const runs = +(localStorage.getItem('react_runs') || 0);
+    content.innerHTML = `
+      <h1 class="big">REACT</h1>
+      <div class="sub">how fast are u really</div>
+      <div class="stats">
+        <div>Best <span>${best ? best + ' ms' : '—'}</span></div>
+        <div>Avg5 <span>${avg ? avg + ' ms' : '—'}</span></div>
+        <div>Runs <span>${runs}</span></div>
+      </div>
+      <div class="hint">TAP TO START</div>
+    `;
+  }
+
+  function startWait() {
+    phase = 'wait';
+    stage.className = 'wait';
+    content.innerHTML = `
+      <h1 class="big">WAIT</h1>
+      <div class="sub">don't tap until green</div>
+    `;
+    const delay = 1200 + Math.random() * 3500;
+    waitTimeout = setTimeout(() => {
+      phase = 'go';
+      stage.className = 'go';
+      goAt = performance.now();
+      content.innerHTML = `
+        <h1 class="big">TAP NOW</h1>
+        <div class="sub">go go go</div>
+      `;
+      audioBeep(800, 0.06, 'square', 0.15);
+      vibrate(20);
+    }, delay);
+  }
+
+  function earlyTap() {
+    clearTimeout(waitTimeout);
+    phase = 'result';
+    stage.className = 'early';
+    content.innerHTML = `
+      <h1 class="big">TOO SOON</h1>
+      <div class="sub">patience my friend</div>
+      <div class="hint">TAP TO TRY AGAIN</div>
+    `;
+    audioBeep(150, 0.3, 'sawtooth', 0.18);
+    vibrate([60, 40, 60]);
+  }
+
+  function recordResult() {
+    const ms = Math.round(performance.now() - goAt);
+    phase = 'result';
+    stage.className = 'result';
+    pushRecent(ms);
+    incRuns();
+    const prevBest = getBest();
+    const isNew = !prevBest || ms < prevBest;
+    if (isNew) setBest(ms);
+    const rank = getRank(ms);
+    const recent = getRecent();
+    const recentBest = Math.min(...recent);
+    const recentHtml = recent.map(r => `<span class="recent-pill ${r === recentBest ? 'best' : ''}">${r}</span>`).join('');
+
+    content.innerHTML = `
+      <div class="ms-label">Reaction Time</div>
+      <div class="ms">${ms}<span style="font-size:0.4em; color: var(--muted);"> ms</span></div>
+      <div class="ranking ${rank.cls}">${rank.label}</div>
+      ${isNew && prevBest ? '<div style="color: var(--accent); letter-spacing:2px; text-transform:uppercase; font-size:0.8rem; margin-top:4px;">NEW BEST</div>' : ''}
+      <div class="recent">${recentHtml}</div>
+      <div class="hint">TAP TO TRY AGAIN</div>
+    `;
+    audioBeep(isNew ? 1200 : 700, 0.12, 'sine', 0.12);
+    if (isNew) {
+      setTimeout(() => audioBeep(1600, 0.15, 'sine', 0.12), 120);
+      vibrate([30, 30, 30]);
+    } else {
+      vibrate(20);
+    }
+  }
+
+  function onTap(e) {
+    if (e && e.target && e.target.classList && e.target.classList.contains('back-btn')) return;
+    if (phase === 'idle' || phase === 'result') {
+      startWait();
+    } else if (phase === 'wait') {
+      earlyTap();
+    } else if (phase === 'go') {
+      recordResult();
+    }
+  }
+
+  stage.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    onTap(e);
+  });
+
+  renderIdle();
+})();
+</script>
+</body>
+</html>

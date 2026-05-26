@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0a0a14" />
+<title>MEMORY</title>
+<style>
+  :root {
+    --bg: #0a0a14;
+    --text: #ffffff;
+    --muted: #888aa0;
+    --accent: #b388ff;
+    --c0: #ff1744;
+    --c1: #00e676;
+    --c2: #00e5ff;
+    --c3: #ffea00;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overscroll-behavior: none;
+  }
+  body { position: fixed; inset: 0; }
+
+  #game {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at top, #1a1a3a 0%, #0a0a14 60%, #000 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+
+  .top {
+    position: absolute;
+    top: env(safe-area-inset-top, 16px);
+    left: 0; right: 0;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 5;
+  }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat.right { align-items: flex-end; }
+  .stat .label { font-size: 0.65rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+  .stat .value { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+  .value.round { color: var(--accent); text-shadow: 0 0 12px currentColor; }
+
+  .status {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.95rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    z-index: 5;
+    white-space: nowrap;
+    text-align: center;
+  }
+  .status.watch { color: var(--accent); text-shadow: 0 0 10px currentColor; }
+  .status.repeat { color: var(--c1); text-shadow: 0 0 10px currentColor; }
+  .status.fail { color: var(--c0); text-shadow: 0 0 10px currentColor; }
+
+  .pad-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 14px;
+    width: min(90vw, 360px);
+    height: min(90vw, 360px);
+    margin-top: 30px;
+  }
+  .pad {
+    border-radius: 18px;
+    opacity: 0.55;
+    transition: opacity 0.08s, transform 0.08s, box-shadow 0.15s;
+    cursor: pointer;
+    position: relative;
+  }
+  .pad.lit {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+  .pad[data-c="0"] { background: var(--c0); box-shadow: 0 0 0 rgba(0,0,0,0); }
+  .pad[data-c="0"].lit { box-shadow: 0 0 50px var(--c0); }
+  .pad[data-c="1"] { background: var(--c1); }
+  .pad[data-c="1"].lit { box-shadow: 0 0 50px var(--c1); }
+  .pad[data-c="2"] { background: var(--c2); }
+  .pad[data-c="2"].lit { box-shadow: 0 0 50px var(--c2); }
+  .pad[data-c="3"] { background: var(--c3); }
+  .pad[data-c="3"].lit { box-shadow: 0 0 50px var(--c3); }
+  .pad.disabled { pointer-events: none; }
+
+  .controls {
+    margin-top: 28px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .btn {
+    background: linear-gradient(135deg, var(--accent), var(--c2));
+    color: #000;
+    border: none;
+    padding: 14px 36px;
+    border-radius: 60px;
+    font-size: 1.05rem;
+    font-weight: 900;
+    cursor: pointer;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    box-shadow: 0 8px 30px rgba(179,136,255,0.4);
+    transition: transform 0.1s;
+  }
+  .btn:active { transform: scale(0.95); }
+  .btn.secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 2px solid #2a2a44;
+    box-shadow: none;
+    padding: 12px 28px;
+  }
+
+  .back-btn {
+    background: rgba(0,0,0,0.6);
+    color: var(--muted);
+    border: 1px solid #2a2a44;
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    margin-top: 6px;
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    padding: 24px;
+    text-align: center;
+    transition: opacity 0.25s;
+  }
+  .overlay.hidden { opacity: 0; pointer-events: none; }
+  .title {
+    font-size: clamp(2.6rem, 12vw, 4.6rem);
+    font-weight: 900;
+    letter-spacing: -2px;
+    background: linear-gradient(135deg, var(--accent), var(--c2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin: 0 0 6px;
+    line-height: 0.9;
+  }
+  .tagline {
+    color: var(--muted);
+    margin: 0 0 28px;
+    font-size: 0.85rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .go-stats {
+    margin: 14px 0 22px;
+    display: flex;
+    gap: 28px;
+  }
+  .go-stats .stat-box { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+  .go-stats .stat-box .l { color: var(--muted); font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; }
+  .go-stats .stat-box .v { font-size: 2.2rem; font-weight: 900; }
+  .new-best { color: var(--c1); font-size: 0.9rem; letter-spacing: 3px; text-transform: uppercase; animation: pulse 0.8s infinite alternate; margin-bottom: 8px; }
+  @keyframes pulse { from { opacity: 0.6; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<div id="game">
+  <div class="top">
+    <div class="stat">
+      <div class="label">Round</div>
+      <div class="value round" id="round">1</div>
+    </div>
+    <div class="stat right">
+      <div class="label">Best</div>
+      <div class="value" id="best">0</div>
+    </div>
+  </div>
+  <div class="status" id="status">TAP START</div>
+  <div class="pad-grid" id="pads">
+    <div class="pad disabled" data-c="0"></div>
+    <div class="pad disabled" data-c="1"></div>
+    <div class="pad disabled" data-c="2"></div>
+    <div class="pad disabled" data-c="3"></div>
+  </div>
+
+  <div class="overlay" id="start-overlay">
+    <h1 class="title">MEMORY</h1>
+    <div class="tagline">repeat the pattern</div>
+    <div style="color: var(--muted); font-size: 0.9rem; max-width: 280px; margin-bottom: 24px;">
+      Pads light up in a sequence. Repeat them. Each round adds one. Don't blink.
+    </div>
+    <button class="btn" id="start-btn">START</button>
+    <a href="../index.html" class="back-btn">← Hub</a>
+  </div>
+
+  <div class="overlay hidden" id="gameover-overlay">
+    <h1 class="title" style="font-size: clamp(1.8rem, 8vw, 3rem);">GAME<br/>OVER</h1>
+    <div class="new-best hidden" id="new-best">NEW BEST</div>
+    <div class="go-stats">
+      <div class="stat-box">
+        <div class="l">Reached</div>
+        <div class="v" id="go-round">1</div>
+      </div>
+      <div class="stat-box">
+        <div class="l">Best</div>
+        <div class="v" id="go-best" style="color: var(--c2);">0</div>
+      </div>
+    </div>
+    <button class="btn" id="retry-btn">TRY AGAIN</button>
+    <a href="../index.html" class="back-btn">← Hub</a>
+  </div>
+</div>
+
+<script>
+(() => {
+  const PADS = [...document.querySelectorAll('.pad')];
+  const roundEl = document.getElementById('round');
+  const bestEl = document.getElementById('best');
+  const statusEl = document.getElementById('status');
+  const startOverlay = document.getElementById('start-overlay');
+  const gameoverOverlay = document.getElementById('gameover-overlay');
+  const startBtn = document.getElementById('start-btn');
+  const retryBtn = document.getElementById('retry-btn');
+  const goRoundEl = document.getElementById('go-round');
+  const goBestEl = document.getElementById('go-best');
+  const newBestEl = document.getElementById('new-best');
+
+  const TONES = [261.63, 329.63, 392.00, 523.25];
+  let sequence = [];
+  let userIdx = 0;
+  let playing = false;
+  let acceptingInput = false;
+
+  function audio(freq, duration=0.25, vol=0.18) {
+    try {
+      const ctx = audio.ctx || (audio.ctx = new (window.AudioContext || window.webkitAudioContext)());
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    } catch(e) {}
+  }
+  function vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
+
+  function getBest() { return +(localStorage.getItem('memory_best') || 0); }
+  function setBest(n) { localStorage.setItem('memory_best', String(n)); }
+  function incRuns() {
+    const n = +(localStorage.getItem('memory_runs') || 0) + 1;
+    localStorage.setItem('memory_runs', String(n));
+  }
+
+  function lightPad(idx, dur=400) {
+    return new Promise(resolve => {
+      const pad = PADS[idx];
+      pad.classList.add('lit');
+      audio(TONES[idx], dur / 1000 + 0.05);
+      setTimeout(() => {
+        pad.classList.remove('lit');
+        setTimeout(resolve, 100);
+      }, dur);
+    });
+  }
+
+  async function playSequence() {
+    acceptingInput = false;
+    PADS.forEach(p => p.classList.add('disabled'));
+    setStatus('watch', 'WATCH');
+    await new Promise(r => setTimeout(r, 600));
+    const speed = Math.max(180, 500 - (sequence.length - 1) * 30);
+    for (const idx of sequence) {
+      await lightPad(idx, speed);
+    }
+    setStatus('repeat', 'YOUR TURN');
+    userIdx = 0;
+    PADS.forEach(p => p.classList.remove('disabled'));
+    acceptingInput = true;
+  }
+
+  function setStatus(cls, text) {
+    statusEl.className = 'status ' + (cls || '');
+    statusEl.textContent = text;
+  }
+
+  function updateRound() {
+    roundEl.textContent = sequence.length;
+    bestEl.textContent = getBest();
+  }
+
+  function nextRound() {
+    sequence.push(Math.floor(Math.random() * 4));
+    updateRound();
+    playSequence();
+  }
+
+  function start() {
+    playing = true;
+    sequence = [];
+    userIdx = 0;
+    bestEl.textContent = getBest();
+    startOverlay.classList.add('hidden');
+    gameoverOverlay.classList.add('hidden');
+    incRuns();
+    nextRound();
+  }
+
+  async function gameOver() {
+    playing = false;
+    acceptingInput = false;
+    PADS.forEach(p => p.classList.add('disabled'));
+    setStatus('fail', 'WRONG');
+    audio(120, 0.6, 0.18);
+    setTimeout(() => audio(80, 0.5, 0.15), 200);
+    vibrate([80, 60, 80, 60, 120]);
+    for (let i = 0; i < 3; i++) {
+      PADS.forEach(p => p.classList.add('lit'));
+      await new Promise(r => setTimeout(r, 120));
+      PADS.forEach(p => p.classList.remove('lit'));
+      await new Promise(r => setTimeout(r, 120));
+    }
+    const reached = sequence.length - 1;
+    const best = getBest();
+    const isNew = reached > best;
+    if (isNew) setBest(reached);
+    goRoundEl.textContent = reached;
+    goBestEl.textContent = isNew ? reached : best;
+    newBestEl.classList.toggle('hidden', !isNew);
+    gameoverOverlay.classList.remove('hidden');
+  }
+
+  function onPad(idx) {
+    if (!acceptingInput || !playing) return;
+    lightPad(idx, 200);
+    vibrate(15);
+    if (sequence[userIdx] === idx) {
+      userIdx++;
+      if (userIdx >= sequence.length) {
+        acceptingInput = false;
+        setTimeout(nextRound, 500);
+      }
+    } else {
+      gameOver();
+    }
+  }
+
+  PADS.forEach((pad, idx) => {
+    pad.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      onPad(idx);
+    });
+  });
+
+  startBtn.addEventListener('click', start);
+  retryBtn.addEventListener('click', start);
+
+  bestEl.textContent = getBest();
+})();
+</script>
+</body>
+</html>
