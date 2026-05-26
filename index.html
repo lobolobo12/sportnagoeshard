@@ -15,8 +15,12 @@
     --rare: #ffea00;
     --epic: #00e5ff;
     --bomb: #ff1744;
+    --slow: #b388ff;
+    --mult: #ff4081;
+    --life: #ff5252;
     --text: #ffffff;
     --muted: #888aa0;
+    --hue: 0deg;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
   html, body {
@@ -30,16 +34,16 @@
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     overscroll-behavior: none;
   }
-  body {
-    position: fixed;
-    inset: 0;
-  }
+  body { position: fixed; inset: 0; }
   #game {
     position: absolute;
     inset: 0;
     background: radial-gradient(ellipse at top, #1a1a3a 0%, #0a0a14 60%, #000 100%);
     overflow: hidden;
+    filter: hue-rotate(var(--hue));
+    transition: filter 0.6s;
   }
+
   .hud {
     position: absolute;
     top: env(safe-area-inset-top, 12px);
@@ -54,9 +58,12 @@
   }
   .hud-left, .hud-right { display: flex; flex-direction: column; gap: 4px; }
   .hud-right { align-items: flex-end; }
-  .label { font-size: 0.7rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
-  .value { font-size: 1.6rem; font-weight: 800; line-height: 1; }
-  .lives { font-size: 1.4rem; letter-spacing: 4px; }
+  .label { font-size: 0.65rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+  .value { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+  .level-tag { font-size: 0.8rem; color: var(--epic); font-weight: 700; letter-spacing: 1px; margin-top: 2px; }
+  .lives { font-size: 1.3rem; letter-spacing: 4px; color: var(--life); }
+  .lives.infinite { color: var(--epic); font-size: 1.5rem; letter-spacing: 0; }
+
   .combo {
     position: absolute;
     top: 90px;
@@ -73,6 +80,53 @@
   }
   .combo.show { opacity: 1; }
 
+  .buffs {
+    position: absolute;
+    top: 90px;
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .buff {
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    border: 1px solid currentColor;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .buff.slow { color: var(--slow); box-shadow: 0 0 12px rgba(179,136,255,0.4); }
+  .buff.mult { color: var(--mult); box-shadow: 0 0 12px rgba(255,64,129,0.4); }
+
+  .banner {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    font-size: 2.4rem;
+    font-weight: 900;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--epic);
+    text-shadow: 0 0 30px currentColor;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 15;
+    transition: transform 0.3s, opacity 0.3s;
+  }
+  .banner.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
   .target {
     position: absolute;
     border-radius: 50%;
@@ -83,7 +137,6 @@
     font-weight: 900;
     cursor: pointer;
     will-change: transform;
-    transition: transform 0.08s;
   }
   .target.good {
     background: radial-gradient(circle at 30% 30%, #66ffa6, var(--good));
@@ -106,6 +159,35 @@
     background: radial-gradient(circle at 30% 30%, #ff6b6b, var(--bomb));
     box-shadow: 0 0 24px var(--bomb), inset 0 0 12px rgba(0,0,0,0.4);
     color: #fff;
+  }
+  .target.slow {
+    background: radial-gradient(circle at 30% 30%, #d1c4e9, var(--slow));
+    box-shadow: 0 0 28px var(--slow), inset 0 0 12px rgba(255,255,255,0.3);
+    animation: slow-spin 2s linear infinite;
+    color: #fff;
+  }
+  @keyframes slow-spin { to { transform: rotate(360deg); } }
+  .target.mult {
+    background: radial-gradient(circle at 30% 30%, #ff80ab, var(--mult));
+    box-shadow: 0 0 28px var(--mult), inset 0 0 12px rgba(255,255,255,0.3);
+    animation: mult-pulse 0.5s infinite alternate;
+    color: #fff;
+  }
+  @keyframes mult-pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.12); }
+  }
+  .target.life {
+    background: radial-gradient(circle at 30% 30%, #ffcdd2, var(--life));
+    box-shadow: 0 0 32px var(--life), inset 0 0 12px rgba(255,255,255,0.3);
+    animation: life-beat 0.7s infinite;
+    color: #fff;
+  }
+  @keyframes life-beat {
+    0%,100% { transform: scale(1); }
+    20% { transform: scale(1.15); }
+    40% { transform: scale(1); }
+    60% { transform: scale(1.08); }
   }
   .target.popped {
     pointer-events: none;
@@ -130,6 +212,16 @@
     to { transform: translateY(-60px); opacity: 0; }
   }
 
+  .particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 4;
+    will-change: transform, opacity;
+  }
+
   .screen {
     position: absolute;
     inset: 0;
@@ -137,15 +229,16 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(ellipse at center, rgba(10,10,30,0.95) 0%, rgba(0,0,0,0.98) 100%);
+    background: radial-gradient(ellipse at center, rgba(10,10,30,0.96) 0%, rgba(0,0,0,0.99) 100%);
     z-index: 20;
     padding: 24px;
     text-align: center;
     transition: opacity 0.3s;
+    overflow-y: auto;
   }
   .screen.hidden { opacity: 0; pointer-events: none; }
   .title {
-    font-size: clamp(3rem, 14vw, 5.5rem);
+    font-size: clamp(2.8rem, 13vw, 5rem);
     font-weight: 900;
     letter-spacing: -2px;
     background: linear-gradient(135deg, var(--epic), var(--rare), var(--bomb));
@@ -158,33 +251,71 @@
   }
   .tagline {
     color: var(--muted);
-    margin: 12px 0 40px;
-    font-size: 0.95rem;
+    margin: 12px 0 24px;
+    font-size: 0.9rem;
     letter-spacing: 3px;
     text-transform: uppercase;
   }
   .legend {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px 24px;
-    margin: 0 0 32px;
-    font-size: 0.85rem;
+    gap: 8px 20px;
+    margin: 0 0 20px;
+    font-size: 0.8rem;
     color: var(--muted);
+    max-width: 320px;
   }
   .legend .row { display: flex; align-items: center; gap: 8px; }
-  .dot { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
-  .dot.good { background: var(--good); box-shadow: 0 0 8px var(--good); }
-  .dot.rare { background: var(--rare); box-shadow: 0 0 8px var(--rare); }
-  .dot.epic { background: var(--epic); box-shadow: 0 0 8px var(--epic); }
-  .dot.bomb { background: var(--bomb); box-shadow: 0 0 8px var(--bomb); }
+  .dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+  .dot.good { background: var(--good); box-shadow: 0 0 6px var(--good); }
+  .dot.rare { background: var(--rare); box-shadow: 0 0 6px var(--rare); }
+  .dot.epic { background: var(--epic); box-shadow: 0 0 6px var(--epic); }
+  .dot.bomb { background: var(--bomb); box-shadow: 0 0 6px var(--bomb); }
+  .dot.slow { background: var(--slow); box-shadow: 0 0 6px var(--slow); }
+  .dot.mult { background: var(--mult); box-shadow: 0 0 6px var(--mult); }
+  .dot.life { background: var(--life); box-shadow: 0 0 6px var(--life); }
+
+  .modes {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .mode-btn {
+    background: transparent;
+    color: var(--muted);
+    border: 2px solid #2a2a44;
+    padding: 10px 18px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .mode-btn.active {
+    color: #000;
+    background: linear-gradient(135deg, var(--epic), var(--rare));
+    border-color: transparent;
+    box-shadow: 0 0 16px rgba(0,229,255,0.4);
+  }
+  .mode-desc {
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-bottom: 24px;
+    min-height: 1.2em;
+    font-style: italic;
+  }
 
   .btn {
     background: linear-gradient(135deg, var(--epic), var(--good));
     color: #000;
     border: none;
-    padding: 18px 48px;
+    padding: 16px 44px;
     border-radius: 60px;
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     font-weight: 900;
     cursor: pointer;
     letter-spacing: 2px;
@@ -194,18 +325,29 @@
   }
   .btn:active { transform: scale(0.95); }
 
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    margin-top: 20px;
+    color: var(--muted);
+    font-size: 0.75rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .stats-bar span { color: var(--text); font-weight: 700; }
+
   .gameover-stats {
-    margin: 20px 0 32px;
+    margin: 16px 0 24px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     align-items: center;
   }
-  .gameover-stats .stat-label { font-size: 0.75rem; color: var(--muted); letter-spacing: 2px; }
-  .gameover-stats .stat-value { font-size: 2.6rem; font-weight: 900; }
+  .gameover-stats .stat-label { font-size: 0.7rem; color: var(--muted); letter-spacing: 2px; }
+  .gameover-stats .stat-value { font-size: 2.4rem; font-weight: 900; }
   .new-high {
     color: var(--rare);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     letter-spacing: 3px;
     text-transform: uppercase;
     animation: pulse 0.8s infinite alternate;
@@ -215,6 +357,8 @@
     to { opacity: 1; }
   }
 
+  .hidden { display: none !important; }
+
   .shake { animation: shake 0.2s; }
   @keyframes shake {
     0%,100% { transform: translate(0,0); }
@@ -222,14 +366,28 @@
     50% { transform: translate(4px,-2px); }
     75% { transform: translate(-2px,4px); }
   }
+
+  .slowmo-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, transparent 30%, rgba(179,136,255,0.15) 100%);
+    pointer-events: none;
+    z-index: 8;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .slowmo-overlay.active { opacity: 1; }
 </style>
 </head>
 <body>
 <div id="game">
+  <div class="slowmo-overlay" id="slowmo-overlay"></div>
+
   <div class="hud">
     <div class="hud-left">
       <div class="label">Score</div>
       <div class="value" id="score">0</div>
+      <div class="level-tag" id="level-tag">Lv 1</div>
     </div>
     <div class="hud-right">
       <div class="label">Lives</div>
@@ -237,21 +395,41 @@
     </div>
   </div>
   <div class="combo" id="combo">x2 COMBO</div>
+  <div class="buffs" id="buffs"></div>
+  <div class="banner" id="banner"></div>
 
   <div class="screen" id="start-screen">
     <h1 class="title">TAP<br/>HARD</h1>
     <div class="tagline">don't touch the bombs</div>
+
     <div class="legend">
       <div class="row"><span class="dot good"></span> +10</div>
       <div class="row"><span class="dot rare"></span> +25</div>
       <div class="row"><span class="dot epic"></span> +100</div>
       <div class="row"><span class="dot bomb"></span> AVOID</div>
+      <div class="row"><span class="dot slow"></span> SLOW-MO</div>
+      <div class="row"><span class="dot mult"></span> 2X SCORE</div>
+      <div class="row"><span class="dot life"></span> +1 LIFE</div>
     </div>
+
+    <div class="modes" id="modes">
+      <button class="mode-btn active" data-mode="classic">Classic</button>
+      <button class="mode-btn" data-mode="hardcore">Hardcore</button>
+      <button class="mode-btn" data-mode="zen">Zen</button>
+    </div>
+    <div class="mode-desc" id="mode-desc">3 lives. Standard chaos.</div>
+
     <button class="btn" id="start-btn">START</button>
+
+    <div class="stats-bar">
+      <div>BEST <span id="stat-best">0</span></div>
+      <div>TAPS <span id="stat-taps">0</span></div>
+      <div>RUNS <span id="stat-runs">0</span></div>
+    </div>
   </div>
 
   <div class="screen hidden" id="gameover-screen">
-    <h1 class="title" style="font-size: clamp(2rem, 9vw, 3.5rem);">GAME<br/>OVER</h1>
+    <h1 class="title" style="font-size: clamp(1.8rem, 8vw, 3rem);">GAME<br/>OVER</h1>
     <div class="gameover-stats">
       <div>
         <div class="stat-label">Score</div>
@@ -261,9 +439,14 @@
         <div class="stat-label">Best</div>
         <div class="stat-value" id="best-score" style="color: var(--rare);">0</div>
       </div>
+      <div>
+        <div class="stat-label">Level Reached</div>
+        <div class="stat-value" id="final-level" style="color: var(--epic); font-size: 1.6rem;">1</div>
+      </div>
       <div class="new-high hidden" id="new-high">NEW HIGH SCORE</div>
     </div>
     <button class="btn" id="retry-btn">TRY AGAIN</button>
+    <button class="mode-btn" id="menu-btn" style="margin-top: 12px;">Menu</button>
   </div>
 </div>
 
@@ -272,31 +455,54 @@
   const game = document.getElementById('game');
   const scoreEl = document.getElementById('score');
   const livesEl = document.getElementById('lives');
+  const levelTagEl = document.getElementById('level-tag');
   const comboEl = document.getElementById('combo');
+  const buffsEl = document.getElementById('buffs');
+  const bannerEl = document.getElementById('banner');
+  const slowmoOverlay = document.getElementById('slowmo-overlay');
   const startScreen = document.getElementById('start-screen');
   const gameoverScreen = document.getElementById('gameover-screen');
   const finalScoreEl = document.getElementById('final-score');
   const bestScoreEl = document.getElementById('best-score');
+  const finalLevelEl = document.getElementById('final-level');
   const newHighEl = document.getElementById('new-high');
   const startBtn = document.getElementById('start-btn');
   const retryBtn = document.getElementById('retry-btn');
+  const menuBtn = document.getElementById('menu-btn');
+  const statTapsEl = document.getElementById('stat-taps');
+  const statRunsEl = document.getElementById('stat-runs');
+  const statBestEl = document.getElementById('stat-best');
+  const modesEl = document.getElementById('modes');
+  const modeDescEl = document.getElementById('mode-desc');
+
+  const MODE_DESC = {
+    classic: '3 lives. Standard chaos.',
+    hardcore: '1 life. No mercy.',
+    zen: 'No bombs. No death. Just vibes.'
+  };
 
   const state = {
     running: false,
+    mode: 'classic',
     score: 0,
     lives: 3,
+    level: 1,
     combo: 0,
     targets: [],
+    particles: [],
     spawnTimer: 0,
     spawnInterval: 900,
     elapsed: 0,
     lastFrame: 0,
     fallSpeed: 0.12,
+    slowmoUntil: 0,
+    multUntil: 0,
   };
 
   const TARGET_SIZE = 64;
 
   function rand(min, max) { return Math.random() * (max - min) + min; }
+  function now() { return performance.now(); }
 
   function audioBeep(freq, duration, type='sine', vol=0.1) {
     try {
@@ -318,12 +524,45 @@
     if (navigator.vibrate) navigator.vibrate(ms);
   }
 
+  function colorOf(type) {
+    return ({
+      good: '#00e676', rare: '#ffea00', epic: '#00e5ff',
+      bomb: '#ff1744', slow: '#b388ff', mult: '#ff4081', life: '#ff5252'
+    })[type];
+  }
+
+  function spawnParticles(x, y, color, count=8) {
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div');
+      el.className = 'particle';
+      el.style.background = color;
+      el.style.boxShadow = `0 0 6px ${color}`;
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      const angle = (Math.PI * 2 * i) / count + rand(-0.3, 0.3);
+      const speed = rand(0.15, 0.35);
+      const p = {
+        el, x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 500,
+        born: now()
+      };
+      game.appendChild(el);
+      state.particles.push(p);
+    }
+  }
+
   function spawnTarget() {
     const roll = Math.random();
+    const noBombs = state.mode === 'zen';
     let type, points;
-    if (roll < 0.10) { type = 'bomb'; points = 0; }
-    else if (roll < 0.15) { type = 'epic'; points = 100; }
-    else if (roll < 0.40) { type = 'rare'; points = 25; }
+    if (!noBombs && roll < 0.10) { type = 'bomb'; points = 0; }
+    else if (roll < 0.13) { type = 'slow'; points = 0; }
+    else if (roll < 0.16) { type = 'mult'; points = 0; }
+    else if (roll < 0.175 && state.mode !== 'zen') { type = 'life'; points = 0; }
+    else if (roll < 0.22) { type = 'epic'; points = 100; }
+    else if (roll < 0.50) { type = 'rare'; points = 25; }
     else { type = 'good'; points = 10; }
 
     const size = type === 'epic' ? TARGET_SIZE - 8 : TARGET_SIZE;
@@ -336,10 +575,16 @@
     el.style.top = -size + 'px';
     if (type === 'bomb') el.textContent = '✕';
     else if (type === 'epic') el.textContent = '★';
+    else if (type === 'slow') el.textContent = '⏱';
+    else if (type === 'mult') el.textContent = 'x2';
+    else if (type === 'life') el.textContent = '♥';
 
-    const speed = state.fallSpeed * (type === 'epic' ? 1.6 : type === 'rare' ? 1.25 : 1);
+    let baseSpeed = state.fallSpeed;
+    if (type === 'epic') baseSpeed *= 1.6;
+    else if (type === 'rare') baseSpeed *= 1.25;
+    else if (type === 'life' || type === 'mult' || type === 'slow') baseSpeed *= 1.1;
 
-    const target = { el, type, points, x, y: -size, size, speed, alive: true };
+    const target = { el, type, points, x, y: -size, size, speed: baseSpeed, alive: true };
     el.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       onTap(target);
@@ -361,11 +606,35 @@
 
   function showCombo() {
     if (state.combo >= 3) {
-      comboEl.textContent = `x${state.combo} COMBO`;
+      comboEl.textContent = `x${comboMult()} COMBO`;
       comboEl.classList.add('show');
       clearTimeout(showCombo.t);
       showCombo.t = setTimeout(() => comboEl.classList.remove('show'), 800);
     }
+  }
+
+  function comboMult() {
+    if (state.combo < 3) return 1;
+    return Math.min(5, Math.floor(state.combo / 3) + 1);
+  }
+
+  function showBanner(text, color) {
+    bannerEl.textContent = text;
+    bannerEl.style.color = color || 'var(--epic)';
+    bannerEl.classList.add('show');
+    clearTimeout(showBanner.t);
+    showBanner.t = setTimeout(() => bannerEl.classList.remove('show'), 1100);
+  }
+
+  function updateBuffs() {
+    const t = now();
+    const slowLeft = Math.max(0, state.slowmoUntil - t);
+    const multLeft = Math.max(0, state.multUntil - t);
+    let html = '';
+    if (slowLeft > 0) html += `<div class="buff slow">⏱ ${(slowLeft/1000).toFixed(1)}s</div>`;
+    if (multLeft > 0) html += `<div class="buff mult">x2 ${(multLeft/1000).toFixed(1)}s</div>`;
+    buffsEl.innerHTML = html;
+    slowmoOverlay.classList.toggle('active', slowLeft > 0);
   }
 
   function onTap(target) {
@@ -374,32 +643,93 @@
     target.el.classList.add('popped');
     setTimeout(() => target.el.remove(), 300);
 
+    incTaps();
+
+    const cx = target.x + target.size / 2;
+    const cy = target.y + target.size / 2;
+    const col = colorOf(target.type);
+
     if (target.type === 'bomb') {
       loseLife();
       state.combo = 0;
       audioBeep(120, 0.3, 'sawtooth', 0.2);
       vibrate([60, 40, 60]);
-      popup('BOOM', target.x, target.y, 'var(--bomb)');
+      popup('BOOM', target.x, target.y, col);
+      spawnParticles(cx, cy, col, 14);
       game.classList.add('shake');
       setTimeout(() => game.classList.remove('shake'), 200);
+    } else if (target.type === 'slow') {
+      state.slowmoUntil = now() + 5000;
+      audioBeep(900, 0.3, 'sine', 0.12);
+      audioBeep(600, 0.4, 'sine', 0.1);
+      vibrate(30);
+      popup('SLOW-MO', target.x, target.y, col);
+      spawnParticles(cx, cy, col, 12);
+      showBanner('SLOW-MO', col);
+    } else if (target.type === 'mult') {
+      state.multUntil = now() + 10000;
+      audioBeep(700, 0.15, 'square', 0.12);
+      audioBeep(1000, 0.15, 'square', 0.12);
+      vibrate(30);
+      popup('x2 SCORE', target.x, target.y, col);
+      spawnParticles(cx, cy, col, 12);
+      showBanner('x2 SCORE', col);
+    } else if (target.type === 'life') {
+      if (state.mode !== 'zen') {
+        state.lives = Math.min(5, state.lives + 1);
+        updateLives();
+      }
+      audioBeep(800, 0.2, 'triangle', 0.12);
+      audioBeep(1200, 0.3, 'triangle', 0.12);
+      vibrate([20, 30, 20]);
+      popup('+1 LIFE', target.x, target.y, col);
+      spawnParticles(cx, cy, col, 14);
+      showBanner('+1 LIFE', col);
     } else {
       state.combo++;
-      const mult = state.combo >= 3 ? Math.min(5, Math.floor(state.combo / 3) + 1) : 1;
-      const gained = target.points * mult;
+      const baseMult = comboMult();
+      const scoreMult = now() < state.multUntil ? 2 : 1;
+      const totalMult = baseMult * scoreMult;
+      const gained = target.points * totalMult;
       state.score += gained;
       scoreEl.textContent = state.score;
-      const color = target.type === 'epic' ? 'var(--epic)' : target.type === 'rare' ? 'var(--rare)' : 'var(--good)';
-      popup(`+${gained}`, target.x, target.y, color);
       const freq = target.type === 'epic' ? 1200 : target.type === 'rare' ? 800 : 600;
       audioBeep(freq, 0.1, 'sine', 0.08);
       vibrate(15);
+      popup(`+${gained}`, target.x, target.y, col);
+      spawnParticles(cx, cy, col, target.type === 'epic' ? 12 : 6);
       showCombo();
+      checkLevelUp();
+    }
+  }
+
+  function checkLevelUp() {
+    const newLevel = Math.floor(state.score / 750) + 1;
+    if (newLevel > state.level) {
+      state.level = newLevel;
+      levelTagEl.textContent = `Lv ${state.level}`;
+      document.documentElement.style.setProperty('--hue', `${(state.level - 1) * 30}deg`);
+      showBanner(`LEVEL ${state.level}`, 'var(--rare)');
+      audioBeep(600, 0.15, 'square', 0.1);
+      audioBeep(900, 0.2, 'square', 0.1);
+      vibrate([20, 30, 20, 30, 60]);
+    }
+  }
+
+  function updateLives() {
+    if (state.mode === 'zen') {
+      livesEl.className = 'value lives infinite';
+      livesEl.textContent = '∞';
+    } else {
+      livesEl.className = 'value lives';
+      livesEl.textContent = '♥'.repeat(Math.max(0, state.lives)) + '·'.repeat(Math.max(0, 3 - state.lives));
     }
   }
 
   function loseLife() {
+    if (state.mode === 'zen') return;
     state.lives--;
-    livesEl.textContent = '♥'.repeat(Math.max(0, state.lives)) + '·'.repeat(3 - Math.max(0, state.lives));
+    updateLives();
     if (state.lives <= 0) gameOver();
   }
 
@@ -409,10 +739,12 @@
     state.lastFrame = t;
     state.elapsed += dt;
 
+    const slowFactor = now() < state.slowmoUntil ? 0.35 : 1;
+
     state.fallSpeed = 0.12 + (state.elapsed / 1000) * 0.006;
     state.spawnInterval = Math.max(280, 900 - state.elapsed * 0.08);
 
-    state.spawnTimer += dt;
+    state.spawnTimer += dt * slowFactor;
     if (state.spawnTimer >= state.spawnInterval) {
       state.spawnTimer = 0;
       spawnTarget();
@@ -421,12 +753,12 @@
     const h = window.innerHeight;
     for (const tgt of state.targets) {
       if (!tgt.alive) continue;
-      tgt.y += tgt.speed * dt;
+      tgt.y += tgt.speed * dt * slowFactor;
       tgt.el.style.top = tgt.y + 'px';
       if (tgt.y > h) {
         tgt.alive = false;
         tgt.el.remove();
-        if (tgt.type !== 'bomb') {
+        if (tgt.type === 'good' || tgt.type === 'rare' || tgt.type === 'epic') {
           loseLife();
           state.combo = 0;
           audioBeep(200, 0.15, 'triangle', 0.1);
@@ -436,23 +768,46 @@
     }
     state.targets = state.targets.filter(t => t.alive);
 
+    const tNow = now();
+    for (const p of state.particles) {
+      const age = tNow - p.born;
+      if (age >= p.life) { p.el.remove(); p.dead = true; continue; }
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vy += 0.0008 * dt;
+      p.el.style.transform = `translate(${p.x - parseFloat(p.el.style.left)}px, ${p.y - parseFloat(p.el.style.top)}px)`;
+      p.el.style.opacity = 1 - age / p.life;
+    }
+    state.particles = state.particles.filter(p => !p.dead);
+
+    updateBuffs();
+
     requestAnimationFrame(loop);
   }
 
   function start() {
     state.running = true;
     state.score = 0;
-    state.lives = 3;
+    state.lives = state.mode === 'hardcore' ? 1 : 3;
+    state.level = 1;
     state.combo = 0;
     state.targets.forEach(t => t.el.remove());
     state.targets = [];
+    state.particles.forEach(p => p.el.remove());
+    state.particles = [];
     state.spawnTimer = 0;
     state.spawnInterval = 900;
     state.elapsed = 0;
     state.fallSpeed = 0.12;
+    state.slowmoUntil = 0;
+    state.multUntil = 0;
     state.lastFrame = performance.now();
+    document.documentElement.style.setProperty('--hue', '0deg');
     scoreEl.textContent = '0';
-    livesEl.textContent = '♥♥♥';
+    levelTagEl.textContent = 'Lv 1';
+    updateLives();
+    buffsEl.innerHTML = '';
+    incRuns();
     startScreen.classList.add('hidden');
     gameoverScreen.classList.add('hidden');
     requestAnimationFrame(loop);
@@ -462,22 +817,61 @@
     state.running = false;
     state.targets.forEach(t => t.el.remove());
     state.targets = [];
+    state.particles.forEach(p => p.el.remove());
+    state.particles = [];
     const best = +(localStorage.getItem('taphard_best') || 0);
     const isNew = state.score > best;
     if (isNew) localStorage.setItem('taphard_best', state.score);
     finalScoreEl.textContent = state.score;
     bestScoreEl.textContent = isNew ? state.score : best;
+    finalLevelEl.textContent = state.level;
     newHighEl.classList.toggle('hidden', !isNew);
     gameoverScreen.classList.remove('hidden');
     audioBeep(300, 0.2, 'sawtooth', 0.15);
     setTimeout(() => audioBeep(150, 0.4, 'sawtooth', 0.15), 150);
     vibrate([100, 50, 100, 50, 200]);
+    refreshStats();
   }
+
+  function backToMenu() {
+    state.running = false;
+    state.targets.forEach(t => t.el.remove());
+    state.targets = [];
+    state.particles.forEach(p => p.el.remove());
+    state.particles = [];
+    gameoverScreen.classList.add('hidden');
+    startScreen.classList.remove('hidden');
+    document.documentElement.style.setProperty('--hue', '0deg');
+    refreshStats();
+  }
+
+  function incTaps() {
+    const n = +(localStorage.getItem('taphard_taps') || 0) + 1;
+    localStorage.setItem('taphard_taps', n);
+  }
+  function incRuns() {
+    const n = +(localStorage.getItem('taphard_runs') || 0) + 1;
+    localStorage.setItem('taphard_runs', n);
+  }
+  function refreshStats() {
+    statBestEl.textContent = localStorage.getItem('taphard_best') || '0';
+    statTapsEl.textContent = localStorage.getItem('taphard_taps') || '0';
+    statRunsEl.textContent = localStorage.getItem('taphard_runs') || '0';
+  }
+
+  modesEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.mode-btn');
+    if (!btn) return;
+    state.mode = btn.dataset.mode;
+    modesEl.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b === btn));
+    modeDescEl.textContent = MODE_DESC[state.mode];
+  });
 
   startBtn.addEventListener('click', start);
   retryBtn.addEventListener('click', start);
+  menuBtn.addEventListener('click', backToMenu);
 
-  bestScoreEl.textContent = localStorage.getItem('taphard_best') || '0';
+  refreshStats();
 })();
 </script>
 </body>
