@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0a0a14" />
+<title>FLAPPY</title>
+<style>
+  :root {
+    --bg: #0a0a14;
+    --text: #ffffff;
+    --muted: #888aa0;
+    --bird: #ffea00;
+    --pipe: #00e676;
+    --sky: #1a1a3a;
+    --accent: #00e5ff;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overscroll-behavior: none;
+  }
+  body { position: fixed; inset: 0; }
+
+  #game {
+    position: absolute; inset: 0;
+    cursor: pointer;
+  }
+  canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: block;
+  }
+
+  .top {
+    position: absolute;
+    top: env(safe-area-inset-top, 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    z-index: 5;
+    pointer-events: none;
+  }
+  .score-big {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 0 20px var(--bird), 0 4px 10px rgba(0,0,0,0.6);
+    line-height: 1;
+  }
+  .best-tag {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .hint {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.8);
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    pointer-events: none;
+    animation: hint-pulse 1.2s infinite alternate;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+  }
+  .hint.hidden { display: none; }
+  @keyframes hint-pulse { from { opacity: 0.4; } to { opacity: 1; } }
+
+  .overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.92);
+    backdrop-filter: blur(4px);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 20; padding: 24px; text-align: center;
+    transition: opacity 0.25s;
+  }
+  .overlay.hidden { opacity: 0; pointer-events: none; }
+  .title {
+    font-size: clamp(2.8rem, 13vw, 4.8rem);
+    font-weight: 900; letter-spacing: -2px; margin: 0;
+    background: linear-gradient(135deg, var(--bird), var(--pipe));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    line-height: 0.9;
+  }
+  .tagline {
+    color: var(--muted); margin: 12px 0 24px;
+    font-size: 0.85rem; letter-spacing: 3px; text-transform: uppercase;
+  }
+  .btn {
+    background: linear-gradient(135deg, var(--bird), var(--pipe));
+    color: #000; border: none; padding: 14px 40px;
+    border-radius: 60px; font-size: 1.1rem; font-weight: 900;
+    cursor: pointer; letter-spacing: 2px; text-transform: uppercase;
+    box-shadow: 0 8px 30px rgba(255,234,0,0.4);
+    transition: transform 0.1s;
+  }
+  .btn:active { transform: scale(0.95); }
+  .back-btn {
+    background: rgba(0,0,0,0.6); color: var(--muted);
+    border: 1px solid #2a2a44; padding: 6px 14px;
+    border-radius: 16px; font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    text-decoration: none; margin-top: 12px;
+  }
+  .go-stats {
+    margin: 16px 0 22px;
+    display: flex; gap: 28px;
+  }
+  .go-stats .l { color: var(--muted); font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; }
+  .go-stats .v { font-size: 2.2rem; font-weight: 900; }
+  .new-best { color: var(--bird); font-size: 0.85rem; letter-spacing: 3px; text-transform: uppercase; animation: pulse 0.8s infinite alternate; margin-bottom: 8px; }
+  @keyframes pulse { from { opacity: 0.6; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<div id="game">
+  <canvas id="cv"></canvas>
+  <div class="top">
+    <div class="score-big" id="score">0</div>
+    <div class="best-tag">Best <span id="best">0</span></div>
+  </div>
+  <div class="hint" id="hint">TAP TO FLAP</div>
+
+  <div class="overlay" id="start">
+    <h1 class="title">FLAPPY</h1>
+    <div class="tagline">tap to flap · don't hit pipes</div>
+    <button class="btn" id="start-btn">START</button>
+    <a href="../index.html" class="back-btn">← Hub</a>
+  </div>
+
+  <div class="overlay hidden" id="gameover">
+    <h1 class="title" style="font-size: clamp(1.8rem, 8vw, 3rem);">GAME<br/>OVER</h1>
+    <div class="new-best hidden" id="new-best">NEW BEST</div>
+    <div class="go-stats">
+      <div><div class="l">Score</div><div class="v" id="go-score">0</div></div>
+      <div><div class="l">Best</div><div class="v" id="go-best" style="color: var(--accent);">0</div></div>
+    </div>
+    <button class="btn" id="retry-btn">TRY AGAIN</button>
+    <a href="../index.html" class="back-btn">← Hub</a>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('cv');
+  const ctx = canvas.getContext('2d');
+  const gameEl = document.getElementById('game');
+  const scoreEl = document.getElementById('score');
+  const bestEl = document.getElementById('best');
+  const startOverlay = document.getElementById('start');
+  const gameoverOverlay = document.getElementById('gameover');
+  const startBtn = document.getElementById('start-btn');
+  const retryBtn = document.getElementById('retry-btn');
+  const goScoreEl = document.getElementById('go-score');
+  const goBestEl = document.getElementById('go-best');
+  const newBestEl = document.getElementById('new-best');
+  const hintEl = document.getElementById('hint');
+
+  let W, H, ground = 80;
+  let bird, pipes, score, alive, lastFrame, lastPipeX;
+  const GRAVITY = 0.0014;
+  const FLAP = -0.55;
+  const PIPE_W = 64;
+  const PIPE_SPEED = 0.22;
+
+  function fit() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function audio(freq, duration=0.08, type='sine', vol=0.1) {
+    try {
+      const c = audio.ctx || (audio.ctx = new (window.AudioContext || window.webkitAudioContext)());
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, c.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
+      osc.connect(gain); gain.connect(c.destination);
+      osc.start(); osc.stop(c.currentTime + duration);
+    } catch(e) {}
+  }
+  function vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
+
+  function reset() {
+    bird = { x: W * 0.28, y: H / 2, vy: 0, r: 16, rot: 0 };
+    pipes = [];
+    lastPipeX = W;
+    score = 0;
+    scoreEl.textContent = 0;
+    bestEl.textContent = +(localStorage.getItem('flappy_best') || 0);
+    alive = true;
+    lastFrame = performance.now();
+  }
+
+  function spawnPipe(x) {
+    const gap = Math.max(140, 200 - Math.min(60, score * 2));
+    const minTop = 60;
+    const maxTop = H - ground - gap - 60;
+    const top = minTop + Math.random() * (maxTop - minTop);
+    pipes.push({ x, top, gap, passed: false });
+  }
+
+  function flap() {
+    if (!alive) return;
+    bird.vy = FLAP;
+    audio(700, 0.06, 'sine', 0.1);
+    vibrate(10);
+    hintEl.classList.add('hidden');
+  }
+
+  function loop(t) {
+    const dt = Math.min(50, t - lastFrame);
+    lastFrame = t;
+
+    if (alive) {
+      bird.vy += GRAVITY * dt;
+      bird.y += bird.vy * dt;
+      bird.rot = Math.max(-0.5, Math.min(1.2, bird.vy * 1.2));
+
+      // floor
+      if (bird.y + bird.r > H - ground) {
+        bird.y = H - ground - bird.r;
+        return gameOver();
+      }
+      // ceiling
+      if (bird.y - bird.r < 0) {
+        bird.y = bird.r;
+        bird.vy = 0;
+      }
+
+      // move pipes
+      for (const p of pipes) {
+        p.x -= PIPE_SPEED * dt;
+        // scoring
+        if (!p.passed && p.x + PIPE_W < bird.x) {
+          p.passed = true;
+          score++;
+          scoreEl.textContent = score;
+          audio(1000, 0.08, 'square', 0.12);
+          vibrate(12);
+        }
+        // collision
+        if (bird.x + bird.r > p.x && bird.x - bird.r < p.x + PIPE_W) {
+          if (bird.y - bird.r < p.top || bird.y + bird.r > p.top + p.gap) {
+            return gameOver();
+          }
+        }
+      }
+      pipes = pipes.filter(p => p.x + PIPE_W > -10);
+
+      // spawn
+      lastPipeX -= PIPE_SPEED * dt;
+      if (W - lastPipeX > 220) {
+        lastPipeX = W;
+        spawnPipe(W);
+      }
+    }
+
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function draw() {
+    // sky gradient
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, '#1a1a3a');
+    grad.addColorStop(1, '#0a0a14');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // distant stars
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    for (let i = 0; i < 30; i++) {
+      const sx = (i * 137) % W;
+      const sy = (i * 73) % (H - ground);
+      ctx.fillRect(sx, sy, 1, 1);
+    }
+
+    // pipes
+    for (const p of pipes) {
+      ctx.fillStyle = '#00e676';
+      ctx.shadowColor = '#00e676';
+      ctx.shadowBlur = 12;
+      ctx.fillRect(p.x, 0, PIPE_W, p.top);
+      ctx.fillRect(p.x, p.top + p.gap, PIPE_W, H - ground - (p.top + p.gap));
+      // caps
+      ctx.fillStyle = '#69f0ae';
+      ctx.fillRect(p.x - 4, p.top - 12, PIPE_W + 8, 12);
+      ctx.fillRect(p.x - 4, p.top + p.gap, PIPE_W + 8, 12);
+    }
+    ctx.shadowBlur = 0;
+
+    // ground
+    ctx.fillStyle = '#2a2a44';
+    ctx.fillRect(0, H - ground, W, ground);
+    ctx.fillStyle = '#1a1a2e';
+    for (let i = 0; i < W; i += 16) {
+      ctx.fillRect(i, H - ground + 4, 8, 4);
+    }
+
+    // bird
+    ctx.save();
+    ctx.translate(bird.x, bird.y);
+    ctx.rotate(bird.rot);
+    ctx.fillStyle = '#ffea00';
+    ctx.shadowColor = '#ffea00';
+    ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.arc(0, 0, bird.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    // eye
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.arc(6, -4, 3, 0, Math.PI * 2);
+    ctx.fill();
+    // beak
+    ctx.fillStyle = '#ff6e40';
+    ctx.beginPath();
+    ctx.moveTo(bird.r - 2, 0);
+    ctx.lineTo(bird.r + 8, -3);
+    ctx.lineTo(bird.r + 8, 3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function gameOver() {
+    if (!alive) return;
+    alive = false;
+    audio(150, 0.4, 'sawtooth', 0.18);
+    setTimeout(() => audio(80, 0.4, 'sawtooth', 0.15), 150);
+    vibrate([80, 60, 120]);
+    const best = +(localStorage.getItem('flappy_best') || 0);
+    const isNew = score > best;
+    if (isNew) localStorage.setItem('flappy_best', score);
+    goScoreEl.textContent = score;
+    goBestEl.textContent = isNew ? score : best;
+    newBestEl.classList.toggle('hidden', !isNew);
+    const runs = +(localStorage.getItem('flappy_runs') || 0) + 1;
+    localStorage.setItem('flappy_runs', runs);
+    setTimeout(() => gameoverOverlay.classList.remove('hidden'), 400);
+  }
+
+  function start() {
+    fit();
+    reset();
+    startOverlay.classList.add('hidden');
+    gameoverOverlay.classList.add('hidden');
+    hintEl.classList.remove('hidden');
+    requestAnimationFrame(loop);
+  }
+
+  gameEl.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.overlay') || e.target.closest('.back-btn') || e.target.closest('.btn')) return;
+    flap();
+  });
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') { e.preventDefault(); flap(); }
+  });
+  startBtn.addEventListener('click', start);
+  retryBtn.addEventListener('click', start);
+  window.addEventListener('resize', fit);
+
+  bestEl.textContent = +(localStorage.getItem('flappy_best') || 0);
+  fit();
+})();
+</script>
+</body>
+</html>

@@ -19,6 +19,7 @@
     --mult: #ff4081;
     --slow: #b388ff;
     --good: #00e676;
+    --wave: #ff6e40;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
   html, body {
@@ -44,7 +45,7 @@
 
   header {
     text-align: center;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
   }
   .logo {
     font-size: clamp(2.6rem, 12vw, 4rem);
@@ -65,100 +66,100 @@
     text-transform: uppercase;
   }
 
-  .games {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    margin-bottom: 28px;
+  .games-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 22px;
   }
   .game-card {
     background: var(--card);
     border: 1px solid #2a2a44;
-    border-radius: 18px;
-    padding: 18px;
+    border-radius: 16px;
+    padding: 14px;
     text-decoration: none;
     color: inherit;
     display: flex;
-    align-items: center;
-    gap: 16px;
+    flex-direction: column;
     cursor: pointer;
     position: relative;
     overflow: hidden;
     transition: transform 0.12s, border-color 0.2s, box-shadow 0.2s;
+    min-height: 130px;
   }
-  .game-card:active {
-    transform: scale(0.98);
-  }
+  .game-card:active { transform: scale(0.97); }
   .game-card::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; bottom: 0;
-    width: 4px;
+    top: 0; left: 0; right: 0;
+    height: 3px;
     background: var(--card-color);
     box-shadow: 0 0 12px var(--card-color);
   }
   .game-card.taphard { --card-color: var(--bomb); }
-  .game-card.react { --card-color: var(--good); }
-  .game-card.memory { --card-color: var(--slow); }
-  .game-card.taphard:hover { border-color: var(--bomb); box-shadow: 0 0 20px rgba(255,23,68,0.2); }
-  .game-card.react:hover { border-color: var(--good); box-shadow: 0 0 20px rgba(0,230,118,0.2); }
-  .game-card.memory:hover { border-color: var(--slow); box-shadow: 0 0 20px rgba(179,136,255,0.2); }
+  .game-card.react   { --card-color: var(--good); }
+  .game-card.memory  { --card-color: var(--slow); }
+  .game-card.snake   { --card-color: var(--good); }
+  .game-card.tiles   { --card-color: var(--rare); }
+  .game-card.stack   { --card-color: var(--accent); }
+  .game-card.flappy  { --card-color: var(--rare); }
 
   .icon {
-    width: 56px; height: 56px;
-    border-radius: 14px;
+    width: 44px; height: 44px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     background: rgba(255,255,255,0.05);
-    flex-shrink: 0;
     color: var(--card-color);
     text-shadow: 0 0 12px currentColor;
-  }
-  .info {
-    flex: 1;
-    min-width: 0;
+    margin-bottom: 10px;
   }
   .game-name {
-    font-size: 1.2rem;
+    font-size: 1.05rem;
     font-weight: 900;
     letter-spacing: -0.5px;
-    margin: 0 0 4px;
+    margin: 0 0 2px;
   }
   .game-desc {
     color: var(--muted);
-    font-size: 0.78rem;
+    font-size: 0.7rem;
     line-height: 1.3;
-    margin: 0;
+    margin: 0 0 8px;
+    flex: 1;
   }
-  .best {
-    text-align: right;
-    flex-shrink: 0;
-  }
-  .best .label {
+  .best-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.65rem;
     color: var(--muted);
-    font-size: 0.6rem;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    margin-bottom: 2px;
+    margin-top: auto;
   }
-  .best .value {
-    font-weight: 900;
-    font-size: 1.05rem;
+  .best-row .v {
     color: var(--card-color);
+    font-weight: 800;
+    font-size: 0.85rem;
+    letter-spacing: 0;
   }
-  .best .value.dash { color: var(--muted); }
+  .best-row .v.dash { color: var(--muted); }
 
   .coming-soon {
     background: transparent;
     border: 1px dashed #2a2a44;
     color: var(--muted);
     cursor: default;
-    opacity: 0.55;
+    opacity: 0.6;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
   }
   .coming-soon::before { display: none; }
   .coming-soon:active { transform: none; }
+  .coming-soon .icon { color: var(--muted); text-shadow: none; }
 
   .lifetime {
     background: rgba(255,255,255,0.03);
@@ -181,12 +182,12 @@
     text-align: center;
   }
   .lifetime .stat .v {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     font-weight: 900;
   }
   .lifetime .stat .l {
     color: var(--muted);
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     letter-spacing: 1.5px;
     text-transform: uppercase;
     margin-top: 2px;
@@ -211,7 +212,7 @@
 
   footer {
     text-align: center;
-    margin-top: 24px;
+    margin-top: 20px;
     color: var(--muted);
     font-size: 0.7rem;
     letter-spacing: 1.5px;
@@ -223,54 +224,65 @@
 <div class="wrap">
   <header>
     <h1 class="logo">HARD<br/>ARCADE</h1>
-    <div class="tagline">built when bored</div>
+    <div class="tagline">7 games · built when bored</div>
   </header>
 
   <div class="streak" id="streak-wrap"></div>
 
-  <div class="games">
+  <div class="games-grid">
     <a href="games/taphard.html" class="game-card taphard">
       <div class="icon">💥</div>
-      <div class="info">
-        <div class="game-name">TAP HARD</div>
-        <div class="game-desc">Tap the orbs. Dodge bombs. Don't blink.</div>
-      </div>
-      <div class="best">
-        <div class="label">Best</div>
-        <div class="value" id="best-taphard">—</div>
-      </div>
+      <div class="game-name">TAP HARD</div>
+      <div class="game-desc">Tap orbs · dodge bombs · combos</div>
+      <div class="best-row"><span>Best</span><span class="v" id="best-taphard">—</span></div>
     </a>
 
     <a href="games/react.html" class="game-card react">
       <div class="icon">⚡</div>
-      <div class="info">
-        <div class="game-name">REACT</div>
-        <div class="game-desc">How fast are your reflexes? Tap on green.</div>
-      </div>
-      <div class="best">
-        <div class="label">Best</div>
-        <div class="value" id="best-react">—</div>
-      </div>
+      <div class="game-name">REACT</div>
+      <div class="game-desc">Wait for green · tap fast</div>
+      <div class="best-row"><span>Best</span><span class="v" id="best-react">—</span></div>
     </a>
 
     <a href="games/memory.html" class="game-card memory">
       <div class="icon">🧠</div>
-      <div class="info">
-        <div class="game-name">MEMORY</div>
-        <div class="game-desc">Repeat the pattern. Each round gets longer.</div>
-      </div>
-      <div class="best">
-        <div class="label">Best</div>
-        <div class="value" id="best-memory">—</div>
-      </div>
+      <div class="game-name">MEMORY</div>
+      <div class="game-desc">Repeat the color pattern</div>
+      <div class="best-row"><span>Best</span><span class="v" id="best-memory">—</span></div>
+    </a>
+
+    <a href="games/snake.html" class="game-card snake">
+      <div class="icon">🐍</div>
+      <div class="game-name">SNAKE</div>
+      <div class="game-desc">Swipe to turn · eat · grow</div>
+      <div class="best-row"><span>Best</span><span class="v" id="best-snake">—</span></div>
+    </a>
+
+    <a href="games/tiles.html" class="game-card tiles">
+      <div class="icon">⬛</div>
+      <div class="game-name">TILES</div>
+      <div class="game-desc">Tap black · avoid white</div>
+      <div class="best-row"><span>Best</span><span class="v" id="best-tiles">—</span></div>
+    </a>
+
+    <a href="games/stack.html" class="game-card stack">
+      <div class="icon">🟦</div>
+      <div class="game-name">STACK</div>
+      <div class="game-desc">Tap to drop · stay aligned</div>
+      <div class="best-row"><span>Best</span><span class="v" id="best-stack">—</span></div>
+    </a>
+
+    <a href="games/flappy.html" class="game-card flappy">
+      <div class="icon">🐤</div>
+      <div class="game-name">FLAPPY</div>
+      <div class="game-desc">Tap to flap · dodge pipes</div>
+      <div class="best-row"><span>Best</span><span class="v" id="best-flappy">—</span></div>
     </a>
 
     <div class="game-card coming-soon">
-      <div class="icon" style="color: var(--muted); text-shadow: none;">+</div>
-      <div class="info">
-        <div class="game-name" style="color: var(--muted);">More coming</div>
-        <div class="game-desc">snake · whack-a-mole · drift · whatever else</div>
-      </div>
+      <div class="icon">+</div>
+      <div class="game-name" style="color: var(--muted);">more soon</div>
+      <div class="game-desc">whack-a-mole · 2048 · breakout</div>
     </div>
   </div>
 
@@ -278,12 +290,12 @@
     <div class="title">Lifetime</div>
     <div class="grid">
       <div class="stat">
-        <div class="v" id="lt-taps">0</div>
-        <div class="l">Taps</div>
-      </div>
-      <div class="stat">
         <div class="v" id="lt-runs">0</div>
         <div class="l">Runs</div>
+      </div>
+      <div class="stat">
+        <div class="v" id="lt-taps">0</div>
+        <div class="l">Taps</div>
       </div>
       <div class="stat">
         <div class="v" id="lt-ach">0</div>
@@ -314,12 +326,19 @@
   }
 
   setBest('best-taphard', lsGetN('taphard_best'));
-  setBest('best-react', lsGetN('react_best'), ' ms');
+  setBest('best-react', lsGetN('react_best'), 'ms');
   setBest('best-memory', lsGetN('memory_best'));
+  setBest('best-snake', lsGetN('snake_best'));
+  setBest('best-tiles', lsGetN('tiles_best'));
+  setBest('best-stack', lsGetN('stack_best'));
+  setBest('best-flappy', lsGetN('flappy_best'));
 
-  document.getElementById('lt-taps').textContent = lsGetN('taphard_taps');
-  const totalRuns = lsGetN('taphard_runs') + lsGetN('react_runs') + lsGetN('memory_runs');
+  const totalRuns =
+    lsGetN('taphard_runs') + lsGetN('react_runs') + lsGetN('memory_runs') +
+    lsGetN('snake_runs') + lsGetN('tiles_runs') + lsGetN('stack_runs') +
+    lsGetN('flappy_runs');
   document.getElementById('lt-runs').textContent = totalRuns;
+  document.getElementById('lt-taps').textContent = lsGetN('taphard_taps');
 
   let achCount = 0;
   try { achCount = JSON.parse(lsGet('taphard_ach', '[]')).length; } catch(e) {}

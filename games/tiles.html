@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0a0a14" />
+<title>TILES</title>
+<style>
+  :root {
+    --bg: #0a0a14;
+    --text: #ffffff;
+    --muted: #888aa0;
+    --tile: #1a1a2e;
+    --black: #000;
+    --accent: #ffea00;
+    --fail: #ff1744;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overscroll-behavior: none;
+  }
+  body { position: fixed; inset: 0; }
+
+  #game {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, #1a1a3a 0%, #0a0a14 100%);
+    display: flex; flex-direction: column;
+    align-items: center;
+  }
+
+  .top {
+    position: absolute;
+    top: env(safe-area-inset-top, 8px);
+    left: 0; right: 0;
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 5;
+  }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat.right { align-items: flex-end; }
+  .stat .label { font-size: 0.6rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+  .stat .value { font-size: 1.4rem; font-weight: 800; line-height: 1; }
+  .value.score { color: var(--accent); text-shadow: 0 0 12px currentColor; }
+
+  #board {
+    position: absolute;
+    top: 65px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    background: var(--tile);
+  }
+
+  .row {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    will-change: transform;
+  }
+  .cell {
+    height: 100%;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    background: var(--tile);
+  }
+  .cell:last-child { border-right: none; }
+  .cell.black {
+    background: var(--black);
+    cursor: pointer;
+  }
+  .cell.tapped {
+    background: #4a4a6a !important;
+    transition: background 0.15s;
+  }
+  .cell.missed {
+    background: var(--fail) !important;
+    animation: shake 0.3s;
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+  }
+
+  .floor-line {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 100px;
+    height: 2px;
+    background: var(--fail);
+    box-shadow: 0 0 10px var(--fail);
+    opacity: 0.3;
+    z-index: 2;
+  }
+
+  .overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.92);
+    backdrop-filter: blur(4px);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 20; padding: 24px; text-align: center;
+    transition: opacity 0.25s;
+  }
+  .overlay.hidden { opacity: 0; pointer-events: none; }
+  .title {
+    font-size: clamp(2.8rem, 13vw, 4.8rem);
+    font-weight: 900; letter-spacing: -2px; margin: 0;
+    background: linear-gradient(135deg, var(--accent), var(--fail));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    line-height: 0.9;
+  }
+  .tagline {
+    color: var(--muted); margin: 12px 0 24px;
+    font-size: 0.85rem; letter-spacing: 3px; text-transform: uppercase;
+    max-width: 280px;
+  }
+  .btn {
+    background: linear-gradient(135deg, var(--accent), var(--fail));
+    color: #000; border: none; padding: 14px 40px;
+    border-radius: 60px; font-size: 1.1rem; font-weight: 900;
+    cursor: pointer; letter-spacing: 2px; text-transform: uppercase;
+    box-shadow: 0 8px 30px rgba(255,234,0,0.4);
+    transition: transform 0.1s;
+  }
+  .btn:active { transform: scale(0.95); }
+  .back-btn {
+    background: rgba(0,0,0,0.6); color: var(--muted);
+    border: 1px solid #2a2a44; padding: 6px 14px;
+    border-radius: 16px; font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    text-decoration: none; margin-top: 12px;
+  }
+  .go-stats {
+    margin: 16px 0 22px;
+    display: flex; gap: 28px;
+  }
+  .go-stats .l { color: var(--muted); font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; }
+  .go-stats .v { font-size: 2.2rem; font-weight: 900; }
+  .new-best { color: var(--accent); font-size: 0.85rem; letter-spacing: 3px; text-transform: uppercase; animation: pulse 0.8s infinite alternate; margin-bottom: 8px; }
+  @keyframes pulse { from { opacity: 0.6; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<div id="game">
+  <div class="top">
+    <div class="stat">
+      <div class="label">Score</div>
+      <div class="value score" id="score">0</div>
+    </div>
+    <div class="stat right">
+      <div class="label">Best</div>
+      <div class="value" id="best">0</div>
+    </div>
+  </div>
+  <div id="board">
+    <div class="floor-line"></div>
+  </div>
+
+  <div class="overlay" id="start">
+    <h1 class="title">TILES</h1>
+    <div class="tagline">tap the black ones · don't touch the white</div>
+    <button class="btn" id="start-btn">START</button>
+    <a href="../index.html" class="back-btn">← Hub</a>
+  </div>
+
+  <div class="overlay hidden" id="gameover">
+    <h1 class="title" style="font-size: clamp(1.8rem, 8vw, 3rem);">GAME<br/>OVER</h1>
+    <div class="new-best hidden" id="new-best">NEW BEST</div>
+    <div class="go-stats">
+      <div><div class="l">Score</div><div class="v" id="go-score">0</div></div>
+      <div><div class="l">Best</div><div class="v" id="go-best" style="color: var(--fail);">0</div></div>
+    </div>
+    <button class="btn" id="retry-btn">TRY AGAIN</button>
+    <a href="../index.html" class="back-btn">← Hub</a>
+  </div>
+</div>
+
+<script>
+(() => {
+  const board = document.getElementById('board');
+  const scoreEl = document.getElementById('score');
+  const bestEl = document.getElementById('best');
+  const startOverlay = document.getElementById('start');
+  const gameoverOverlay = document.getElementById('gameover');
+  const startBtn = document.getElementById('start-btn');
+  const retryBtn = document.getElementById('retry-btn');
+  const goScoreEl = document.getElementById('go-score');
+  const goBestEl = document.getElementById('go-best');
+  const newBestEl = document.getElementById('new-best');
+
+  let rows = []; // {el, y, blackCol, tapped, missed}
+  let score = 0;
+  let speed = 0.15;
+  let alive = false;
+  let lastSpawn = 0;
+  let lastFrame = 0;
+  let boardH = 0;
+  let rowH = 100;
+  let nextRowY = 0;
+
+  function audio(freq, duration=0.08, type='sine', vol=0.1) {
+    try {
+      const c = audio.ctx || (audio.ctx = new (window.AudioContext || window.webkitAudioContext)());
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, c.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
+      osc.connect(gain); gain.connect(c.destination);
+      osc.start(); osc.stop(c.currentTime + duration);
+    } catch(e) {}
+  }
+  function vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
+
+  function spawnRow() {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.style.height = rowH + 'px';
+    const blackCol = Math.floor(Math.random() * 4);
+    const cells = [];
+    for (let i = 0; i < 4; i++) {
+      const c = document.createElement('div');
+      c.className = 'cell' + (i === blackCol ? ' black' : '');
+      c.dataset.col = i;
+      cells.push(c);
+      row.appendChild(c);
+    }
+    row.style.transform = `translateY(${nextRowY}px)`;
+    board.appendChild(row);
+    const r = { el: row, y: nextRowY, blackCol, tapped: false, missed: false, cells };
+    cells[blackCol].addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      onTapBlack(r);
+    });
+    // tapping a white cell = game over
+    cells.forEach((c, i) => {
+      if (i === blackCol) return;
+      c.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        if (!alive) return;
+        c.classList.add('missed');
+        fail('TAPPED WHITE');
+      });
+    });
+    rows.push(r);
+    nextRowY -= rowH;
+  }
+
+  function onTapBlack(r) {
+    if (!alive || r.tapped) return;
+    r.tapped = true;
+    r.cells[r.blackCol].classList.add('tapped');
+    score++;
+    scoreEl.textContent = score;
+    audio(400 + (score % 12) * 50, 0.07, 'sine', 0.1);
+    vibrate(10);
+    speed = Math.min(0.6, 0.15 + score * 0.004);
+  }
+
+  function loop(t) {
+    if (!alive) return;
+    const dt = Math.min(50, t - lastFrame);
+    lastFrame = t;
+
+    for (const r of rows) {
+      r.y += speed * dt;
+      r.el.style.transform = `translateY(${r.y}px)`;
+    }
+    nextRowY += speed * dt;
+
+    // spawn rows as needed (keep nextRowY around -rowH so a new row appears at top)
+    while (nextRowY > -rowH) {
+      // we need to spawn at nextRowY - rowH (above current top)
+      // simpler: spawn at top continuously
+      const topY = Math.min(...rows.map(r => r.y));
+      if (topY > -boardH - rowH * 2) {
+        // spawn one above
+        const r = spawnRowAt(topY - rowH);
+      } else break;
+      // safety: don't loop forever
+      if (rows.length > 30) break;
+      break;
+    }
+
+    // check failures: black row that crossed the failure line and not tapped
+    const failLine = boardH - 100;
+    for (const r of rows) {
+      if (!r.tapped && !r.missed && r.y >= failLine - rowH + 20) {
+        // black tile reached the danger zone & still untapped → check if past line
+        if (r.y >= failLine) {
+          r.missed = true;
+          r.cells[r.blackCol].classList.add('missed');
+          return fail('MISSED');
+        }
+      }
+    }
+
+    // cleanup off-screen
+    rows = rows.filter(r => {
+      if (r.y > boardH) { r.el.remove(); return false; }
+      return true;
+    });
+
+    requestAnimationFrame(loop);
+  }
+
+  function spawnRowAt(y) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.style.height = rowH + 'px';
+    const blackCol = Math.floor(Math.random() * 4);
+    const cells = [];
+    for (let i = 0; i < 4; i++) {
+      const c = document.createElement('div');
+      c.className = 'cell' + (i === blackCol ? ' black' : '');
+      cells.push(c);
+      row.appendChild(c);
+    }
+    row.style.transform = `translateY(${y}px)`;
+    board.appendChild(row);
+    const r = { el: row, y, blackCol, tapped: false, missed: false, cells };
+    cells[blackCol].addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      onTapBlack(r);
+    });
+    cells.forEach((c, i) => {
+      if (i === blackCol) return;
+      c.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        if (!alive) return;
+        c.classList.add('missed');
+        fail('TAPPED WHITE');
+      });
+    });
+    rows.push(r);
+    return r;
+  }
+
+  function fail(reason) {
+    if (!alive) return;
+    alive = false;
+    audio(150, 0.4, 'sawtooth', 0.18);
+    setTimeout(() => audio(80, 0.4, 'sawtooth', 0.15), 150);
+    vibrate([80, 60, 120]);
+    const best = +(localStorage.getItem('tiles_best') || 0);
+    const isNew = score > best;
+    if (isNew) localStorage.setItem('tiles_best', score);
+    goScoreEl.textContent = score;
+    goBestEl.textContent = isNew ? score : best;
+    newBestEl.classList.toggle('hidden', !isNew);
+    setTimeout(() => gameoverOverlay.classList.remove('hidden'), 350);
+    const runs = +(localStorage.getItem('tiles_runs') || 0) + 1;
+    localStorage.setItem('tiles_runs', runs);
+  }
+
+  function start() {
+    boardH = board.clientHeight;
+    rowH = Math.min(140, Math.max(85, Math.floor(boardH / 5)));
+    rows.forEach(r => r.el.remove());
+    rows = [];
+    score = 0;
+    speed = 0.15;
+    scoreEl.textContent = 0;
+    bestEl.textContent = +(localStorage.getItem('tiles_best') || 0);
+    nextRowY = -rowH;
+    // pre-spawn rows from bottom up
+    for (let i = 0; i < 5; i++) {
+      spawnRowAt(boardH - 100 - rowH - (i * rowH));
+    }
+    alive = true;
+    lastFrame = performance.now();
+    startOverlay.classList.add('hidden');
+    gameoverOverlay.classList.add('hidden');
+    requestAnimationFrame(loop);
+  }
+
+  startBtn.addEventListener('click', start);
+  retryBtn.addEventListener('click', start);
+  bestEl.textContent = +(localStorage.getItem('tiles_best') || 0);
+})();
+</script>
+</body>
+</html>
