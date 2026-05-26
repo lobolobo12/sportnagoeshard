@@ -5,123 +5,109 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
-<meta name="theme-color" content="#0a0a14" />
-<title>FLAPPY</title>
+<meta name="theme-color" content="#f4ede0" />
+<title>FLAPPY · 鳥</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@400;500;700;800&family=Yuji+Boku&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --bg: #0a0a14;
-    --text: #ffffff;
-    --muted: #888aa0;
-    --bird: #ffea00;
-    --pipe: #00e676;
-    --sky: #1a1a3a;
-    --accent: #00e5ff;
+    --paper: #f4ede0;
+    --paper-2: #ece4d1;
+    --paper-3: #e0d5bb;
+    --ink: #1c1a16;
+    --ink-soft: #3a352d;
+    --faded: #8a7e6a;
+    --rust: #c84a1d;
+    --stamp-red: #b32d23;
+    --mustard: #c69a2a;
+    --rule: rgba(28,26,22,0.18);
+    --f-display: 'RocknRoll One', system-ui, sans-serif;
+    --f-mincho: 'Shippori Mincho', serif;
+    --f-jp: 'Noto Sans JP', system-ui, sans-serif;
+    --f-mono: 'JetBrains Mono', monospace;
+    --f-brush: 'Yuji Boku', serif;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
   html, body {
     margin: 0; padding: 0; width: 100%; height: 100%;
-    overflow: hidden; background: var(--bg); color: var(--text);
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow: hidden; background: var(--paper); color: var(--ink);
+    font-family: var(--f-jp);
     overscroll-behavior: none;
   }
   body { position: fixed; inset: 0; }
+  body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 100; background: repeating-linear-gradient(0deg, rgba(28,26,22,0.04) 0 1px, transparent 1px 3px); mix-blend-mode: multiply; }
+  body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 101; background: radial-gradient(ellipse at center, transparent 55%, rgba(28,26,22,0.18) 100%); }
 
-  #game {
-    position: absolute; inset: 0;
-    cursor: pointer;
-  }
-  canvas {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    display: block;
-  }
+  #game { position: absolute; inset: 0; cursor: pointer; }
+  canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; }
 
   .top {
     position: absolute;
-    top: env(safe-area-inset-top, 12px);
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    z-index: 5;
+    top: env(safe-area-inset-top, 14px);
+    left: 50%; transform: translateX(-50%);
+    text-align: center; z-index: 5;
     pointer-events: none;
   }
   .score-big {
-    font-size: 3.5rem;
-    font-weight: 900;
-    color: #fff;
-    text-shadow: 0 0 20px var(--bird), 0 4px 10px rgba(0,0,0,0.6);
+    font-family: var(--f-display);
+    font-size: 3.2rem;
+    color: var(--ink);
     line-height: 1;
+    text-shadow: 2px 2px 0 var(--paper);
   }
   .best-tag {
     margin-top: 4px;
-    color: var(--muted);
-    font-size: 0.7rem;
-    letter-spacing: 2px;
+    font-family: var(--f-mono);
+    color: var(--ink-soft);
+    font-size: 10px;
+    letter-spacing: 0.24em;
     text-transform: uppercase;
   }
+  .best-tag .kanji { font-family: var(--f-brush); color: var(--rust); margin-right: 4px; }
 
   .hint {
     position: absolute;
-    bottom: 100px;
-    left: 50%;
+    bottom: 100px; left: 50%;
     transform: translateX(-50%);
-    color: rgba(255,255,255,0.8);
-    font-size: 0.85rem;
-    letter-spacing: 2px;
+    font-family: var(--f-mono);
+    font-size: 11px;
+    letter-spacing: 0.32em;
     text-transform: uppercase;
+    color: var(--ink-soft);
     pointer-events: none;
     animation: hint-pulse 1.2s infinite alternate;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
   }
   .hint.hidden { display: none; }
+  .hint .kanji { font-family: var(--f-brush); font-size: 14px; margin: 0 6px; color: var(--rust); }
   @keyframes hint-pulse { from { opacity: 0.4; } to { opacity: 1; } }
 
   .overlay {
     position: absolute; inset: 0;
-    background: rgba(0,0,0,0.92);
-    backdrop-filter: blur(4px);
+    background: var(--paper);
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     z-index: 20; padding: 24px; text-align: center;
     transition: opacity 0.25s;
   }
   .overlay.hidden { opacity: 0; pointer-events: none; }
-  .title {
-    font-size: clamp(2.8rem, 13vw, 4.8rem);
-    font-weight: 900; letter-spacing: -2px; margin: 0;
-    background: linear-gradient(135deg, var(--bird), var(--pipe));
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-    line-height: 0.9;
+  .title-jp { font-family: var(--f-jp); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.32em; color: var(--faded); margin: 0 0 4px; }
+  .title-en {
+    font-family: var(--f-display);
+    font-size: clamp(2.6rem, 12vw, 4rem);
+    line-height: 0.9; color: var(--ink);
+    margin: 0 0 8px; letter-spacing: -0.01em;
   }
-  .tagline {
-    color: var(--muted); margin: 12px 0 24px;
-    font-size: 0.85rem; letter-spacing: 3px; text-transform: uppercase;
-  }
-  .btn {
-    background: linear-gradient(135deg, var(--bird), var(--pipe));
-    color: #000; border: none; padding: 14px 40px;
-    border-radius: 60px; font-size: 1.1rem; font-weight: 900;
-    cursor: pointer; letter-spacing: 2px; text-transform: uppercase;
-    box-shadow: 0 8px 30px rgba(255,234,0,0.4);
-    transition: transform 0.1s;
-  }
-  .btn:active { transform: scale(0.95); }
-  .back-btn {
-    background: rgba(0,0,0,0.6); color: var(--muted);
-    border: 1px solid #2a2a44; padding: 6px 14px;
-    border-radius: 16px; font-size: 0.7rem; font-weight: 700;
-    letter-spacing: 1.5px; text-transform: uppercase;
-    text-decoration: none; margin-top: 12px;
-  }
-  .go-stats {
-    margin: 16px 0 22px;
-    display: flex; gap: 28px;
-  }
-  .go-stats .l { color: var(--muted); font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; }
-  .go-stats .v { font-size: 2.2rem; font-weight: 900; }
-  .new-best { color: var(--bird); font-size: 0.85rem; letter-spacing: 3px; text-transform: uppercase; animation: pulse 0.8s infinite alternate; margin-bottom: 8px; }
-  @keyframes pulse { from { opacity: 0.6; } to { opacity: 1; } }
+  .title-en .kanji { font-family: var(--f-brush); color: var(--stamp-red); font-size: 0.8em; margin-left: 0.15em; }
+  .tag-line { font-family: var(--f-mincho); font-style: italic; color: var(--ink-soft); font-size: 0.95rem; margin: 6px 0 24px; max-width: 280px; }
+  .btn { background: var(--rust); color: var(--paper); border: none; padding: 12px 36px; font-family: var(--f-display); font-size: 1.1rem; letter-spacing: 0.16em; text-transform: uppercase; box-shadow: 3px 3px 0 var(--ink); cursor: pointer; transition: transform 0.1s; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+  .back-btn { background: var(--paper); color: var(--ink-soft); border: 1px solid var(--ink); padding: 5px 12px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; text-decoration: none; margin-top: 14px; display: inline-block; }
+  .go-receipt { border: 1px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); padding: 14px 18px; margin: 16px 0 20px; background: var(--paper); min-width: 240px; }
+  .go-receipt .row { display: flex; align-items: baseline; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-soft); line-height: 2; }
+  .go-receipt .leader { flex: 1; border-bottom: 1px dotted var(--rule); margin: 0 8px; transform: translateY(-3px); }
+  .go-receipt .val { font-weight: 700; color: var(--ink); font-size: 14px; }
+  .new-best { color: var(--stamp-red); font-family: var(--f-display); font-size: 12px; letter-spacing: 0.3em; margin-bottom: 4px; }
 </style>
 </head>
 <body>
@@ -129,26 +115,28 @@
   <canvas id="cv"></canvas>
   <div class="top">
     <div class="score-big" id="score">0</div>
-    <div class="best-tag">Best <span id="best">0</span></div>
+    <div class="best-tag"><span class="kanji">記</span>BEST · <span id="best">0</span></div>
   </div>
-  <div class="hint" id="hint">TAP TO FLAP</div>
+  <div class="hint" id="hint"><span class="kanji">押</span>TAP TO FLAP</div>
 
   <div class="overlay" id="start">
-    <h1 class="title">FLAPPY</h1>
-    <div class="tagline">tap to flap · don't hit pipes</div>
+    <div class="title-jp">フラッピー · NO. 07</div>
+    <h1 class="title-en">FLAPPY<span class="kanji">鳥</span></h1>
+    <div class="tag-line">tap to flap · don't kiss the torii · mind the ground.</div>
     <button class="btn" id="start-btn">START</button>
-    <a href="../index.html" class="back-btn">← Hub</a>
+    <a href="../index.html" class="back-btn">← HUB</a>
   </div>
 
   <div class="overlay hidden" id="gameover">
-    <h1 class="title" style="font-size: clamp(1.8rem, 8vw, 3rem);">GAME<br/>OVER</h1>
-    <div class="new-best hidden" id="new-best">NEW BEST</div>
-    <div class="go-stats">
-      <div><div class="l">Score</div><div class="v" id="go-score">0</div></div>
-      <div><div class="l">Best</div><div class="v" id="go-best" style="color: var(--accent);">0</div></div>
+    <div class="title-jp" style="color: var(--stamp-red);">落 · DROPPED</div>
+    <h1 class="title-en" style="font-size: clamp(2rem, 9vw, 3rem);">FALLEN<span class="kanji" style="color:var(--stamp-red);">落</span></h1>
+    <div class="new-best hidden" id="new-best">★ NEW BEST</div>
+    <div class="go-receipt">
+      <div class="row"><span>Score</span><span class="leader"></span><span class="val" id="go-score">0</span></div>
+      <div class="row"><span>Best</span><span class="leader"></span><span class="val" id="go-best" style="color: var(--rust);">0</span></div>
     </div>
     <button class="btn" id="retry-btn">TRY AGAIN</button>
-    <a href="../index.html" class="back-btn">← Hub</a>
+    <a href="../index.html" class="back-btn">← HUB</a>
   </div>
 </div>
 
@@ -177,20 +165,15 @@
 
   function fit() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = window.innerWidth;
-    H = window.innerHeight;
-    canvas.width = W * dpr;
-    canvas.height = H * dpr;
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
-
   function audio(freq, duration=0.08, type='sine', vol=0.1) {
     try {
       const c = audio.ctx || (audio.ctx = new (window.AudioContext || window.webkitAudioContext)());
-      const osc = c.createOscillator();
-      const gain = c.createGain();
+      const osc = c.createOscillator(); const gain = c.createGain();
       osc.type = type; osc.frequency.value = freq;
       gain.gain.setValueAtTime(vol, c.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
@@ -202,8 +185,7 @@
 
   function reset() {
     bird = { x: W * 0.28, y: H / 2, vy: 0, r: 16, rot: 0 };
-    pipes = [];
-    lastPipeX = W;
+    pipes = []; lastPipeX = W;
     score = 0;
     scoreEl.textContent = 0;
     bestEl.textContent = +(localStorage.getItem('flappy_best') || 0);
@@ -236,21 +218,11 @@
       bird.y += bird.vy * dt;
       bird.rot = Math.max(-0.5, Math.min(1.2, bird.vy * 1.2));
 
-      // floor
-      if (bird.y + bird.r > H - ground) {
-        bird.y = H - ground - bird.r;
-        return gameOver();
-      }
-      // ceiling
-      if (bird.y - bird.r < 0) {
-        bird.y = bird.r;
-        bird.vy = 0;
-      }
+      if (bird.y + bird.r > H - ground) { bird.y = H - ground - bird.r; return gameOver(); }
+      if (bird.y - bird.r < 0) { bird.y = bird.r; bird.vy = 0; }
 
-      // move pipes
       for (const p of pipes) {
         p.x -= PIPE_SPEED * dt;
-        // scoring
         if (!p.passed && p.x + PIPE_W < bird.x) {
           p.passed = true;
           score++;
@@ -258,89 +230,106 @@
           audio(1000, 0.08, 'square', 0.12);
           vibrate(12);
         }
-        // collision
         if (bird.x + bird.r > p.x && bird.x - bird.r < p.x + PIPE_W) {
-          if (bird.y - bird.r < p.top || bird.y + bird.r > p.top + p.gap) {
-            return gameOver();
-          }
+          if (bird.y - bird.r < p.top || bird.y + bird.r > p.top + p.gap) return gameOver();
         }
       }
       pipes = pipes.filter(p => p.x + PIPE_W > -10);
 
-      // spawn
       lastPipeX -= PIPE_SPEED * dt;
       if (W - lastPipeX > 220) {
         lastPipeX = W;
         spawnPipe(W);
       }
     }
-
     draw();
     requestAnimationFrame(loop);
   }
 
   function draw() {
-    // sky gradient
+    // sky — paper gradient (cream above, slightly warmer below)
     const grad = ctx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, '#1a1a3a');
-    grad.addColorStop(1, '#0a0a14');
+    grad.addColorStop(0, '#f4ede0');
+    grad.addColorStop(1, '#e0d5bb');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, H);
 
-    // distant stars
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    for (let i = 0; i < 30; i++) {
-      const sx = (i * 137) % W;
-      const sy = (i * 73) % (H - ground);
-      ctx.fillRect(sx, sy, 1, 1);
+    // faint cloud strokes (mincho-ish)
+    ctx.strokeStyle = 'rgba(28,26,22,0.06)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 5; i++) {
+      const cy = 60 + i * 90 + ((Date.now() / 100) % H);
+      const cyMod = cy % (H - ground);
+      ctx.beginPath();
+      ctx.moveTo(0, cyMod);
+      ctx.lineTo(W, cyMod);
+      ctx.stroke();
     }
 
-    // pipes
+    // pipes (rust torii style)
     for (const p of pipes) {
-      ctx.fillStyle = '#00e676';
-      ctx.shadowColor = '#00e676';
-      ctx.shadowBlur = 12;
+      // post bodies
+      ctx.fillStyle = '#c84a1d';
       ctx.fillRect(p.x, 0, PIPE_W, p.top);
       ctx.fillRect(p.x, p.top + p.gap, PIPE_W, H - ground - (p.top + p.gap));
-      // caps
-      ctx.fillStyle = '#69f0ae';
-      ctx.fillRect(p.x - 4, p.top - 12, PIPE_W + 8, 12);
-      ctx.fillRect(p.x - 4, p.top + p.gap, PIPE_W + 8, 12);
+      // ink outlines
+      ctx.strokeStyle = '#1c1a16';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(p.x + 0.75, 0, PIPE_W - 1.5, p.top);
+      ctx.strokeRect(p.x + 0.75, p.top + p.gap, PIPE_W - 1.5, H - ground - (p.top + p.gap));
+      // torii top caps (kasagi)
+      ctx.fillStyle = '#9a3514';
+      ctx.fillRect(p.x - 8, p.top - 12, PIPE_W + 16, 8);
+      ctx.fillRect(p.x - 8, p.top + p.gap + 4, PIPE_W + 16, 8);
+      ctx.strokeRect(p.x - 8 + 0.75, p.top - 12, PIPE_W + 16 - 1.5, 8);
+      ctx.strokeRect(p.x - 8 + 0.75, p.top + p.gap + 4, PIPE_W + 16 - 1.5, 8);
     }
-    ctx.shadowBlur = 0;
 
-    // ground
-    ctx.fillStyle = '#2a2a44';
+    // ground (ink line + paper-3 strip)
+    ctx.fillStyle = '#e0d5bb';
     ctx.fillRect(0, H - ground, W, ground);
-    ctx.fillStyle = '#1a1a2e';
-    for (let i = 0; i < W; i += 16) {
-      ctx.fillRect(i, H - ground + 4, 8, 4);
-    }
+    ctx.strokeStyle = '#1c1a16';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, H - ground);
+    ctx.lineTo(W, H - ground);
+    ctx.stroke();
+    // ground dashes
+    ctx.strokeStyle = 'rgba(28,26,22,0.18)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 6]);
+    ctx.beginPath();
+    ctx.moveTo(0, H - ground + 14);
+    ctx.lineTo(W, H - ground + 14);
+    ctx.stroke();
+    ctx.setLineDash([]);
 
-    // bird
+    // bird (mustard circle, ink outline)
     ctx.save();
     ctx.translate(bird.x, bird.y);
     ctx.rotate(bird.rot);
-    ctx.fillStyle = '#ffea00';
-    ctx.shadowColor = '#ffea00';
-    ctx.shadowBlur = 14;
+    ctx.fillStyle = '#c69a2a';
     ctx.beginPath();
     ctx.arc(0, 0, bird.r, 0, Math.PI * 2);
     ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#1c1a16';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
     // eye
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = '#1c1a16';
     ctx.beginPath();
-    ctx.arc(6, -4, 3, 0, Math.PI * 2);
+    ctx.arc(6, -4, 2.5, 0, Math.PI * 2);
     ctx.fill();
     // beak
-    ctx.fillStyle = '#ff6e40';
+    ctx.fillStyle = '#c84a1d';
+    ctx.strokeStyle = '#1c1a16';
     ctx.beginPath();
     ctx.moveTo(bird.r - 2, 0);
     ctx.lineTo(bird.r + 8, -3);
     ctx.lineTo(bird.r + 8, 3);
     ctx.closePath();
     ctx.fill();
+    ctx.stroke();
     ctx.restore();
   }
 
@@ -362,8 +351,7 @@
   }
 
   function start() {
-    fit();
-    reset();
+    fit(); reset();
     startOverlay.classList.add('hidden');
     gameoverOverlay.classList.add('hidden');
     hintEl.classList.remove('hidden');
@@ -380,7 +368,6 @@
   startBtn.addEventListener('click', start);
   retryBtn.addEventListener('click', start);
   window.addEventListener('resize', fit);
-
   bestEl.textContent = +(localStorage.getItem('flappy_best') || 0);
   fit();
 })();
