@@ -697,6 +697,233 @@
     cursor: pointer;
   }
   .settings-close-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+
+  /* ─── featured card (today's pick) ─── */
+  .featured-wrap { margin-bottom: 18px; }
+  .featured {
+    display: grid;
+    grid-template-columns: 104px 1fr;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    box-shadow: 5px 5px 0 var(--ink);
+    text-decoration: none;
+    color: var(--ink);
+    position: relative;
+    overflow: hidden;
+    min-height: 168px;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .featured:active { transform: translate(2px, 2px); box-shadow: 3px 3px 0 var(--ink); }
+  .featured::before {
+    content: '';
+    position: absolute;
+    left: 104px; top: 0; bottom: 0;
+    border-left: 1px dashed var(--ink);
+    opacity: 0.5;
+  }
+  .featured::after {
+    content: '';
+    position: absolute;
+    left: 104px; top: -8px;
+    width: 16px; height: 16px;
+    margin-left: -8px;
+    border-radius: 50%;
+    background: var(--paper-2);
+    border: 1.5px solid var(--ink);
+    box-shadow:
+      0 calc(100% + 16px) 0 -1px var(--paper-2),
+      0 calc(100% + 16px) 0 0.5px var(--ink);
+  }
+  .featured .stub {
+    background: var(--ink);
+    color: var(--paper);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 8px 16px;
+    position: relative;
+  }
+  .featured .stub .no {
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--paper-3);
+    opacity: 0.7;
+  }
+  .featured .stub .glyph {
+    font-family: var(--f-brush);
+    font-size: 60px;
+    line-height: 1;
+    color: var(--paper);
+  }
+  .featured .stub .mini {
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.22em;
+    color: var(--rust);
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.9;
+  }
+  .featured .body {
+    padding: 14px 18px 14px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+  }
+  .featured .pick-tag {
+    font-family: var(--f-display);
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    color: var(--stamp-red);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .featured .name-jp {
+    font-family: var(--f-jp);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    color: var(--faded);
+    margin-bottom: 1px;
+  }
+  .featured .name-en {
+    font-family: var(--f-display);
+    font-size: clamp(1.6rem, 8vw, 2.1rem);
+    line-height: 0.95;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    margin: 0 0 6px;
+  }
+  .featured .desc {
+    font-family: var(--f-mincho);
+    font-style: italic;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+    margin: 0 0 12px;
+  }
+  .featured .row2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 1px dashed var(--rule);
+    margin-top: auto;
+  }
+  .featured .price-mini {
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.2em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+  .featured .price-mini .v {
+    color: var(--rust);
+    font-weight: 700;
+  }
+  .featured .play-big {
+    font-family: var(--f-display);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    color: var(--paper);
+    background: var(--rust);
+    padding: 5px 14px 4px;
+    box-shadow: 2px 2px 0 var(--ink);
+    text-transform: uppercase;
+  }
+
+  /* ─── tight 3-col grid ─── */
+  .grid-cabinets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .grid-card {
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    box-shadow: 2px 2px 0 var(--ink);
+    padding: 10px 6px 8px;
+    text-decoration: none;
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    min-height: 100px;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .grid-card:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+  .grid-card .no {
+    font-family: var(--f-mono);
+    font-size: 8px;
+    letter-spacing: 0.16em;
+    color: var(--faded);
+    position: absolute;
+    top: 4px;
+    left: 5px;
+  }
+  .grid-card .accent-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--card-color, var(--rust));
+  }
+  .grid-card .glyph {
+    font-family: var(--f-brush);
+    font-size: 28px;
+    color: var(--ink);
+    line-height: 1;
+    margin: 8px 0 2px;
+  }
+  .grid-card .name {
+    font-family: var(--f-display);
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    text-align: center;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .grid-card .best {
+    font-family: var(--f-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    color: var(--faded);
+    margin-top: auto;
+  }
+  .grid-card .best .v {
+    color: var(--rust);
+    font-weight: 700;
+  }
+  .grid-card.is-featured {
+    border-color: var(--stamp-red);
+    box-shadow: 2px 2px 0 var(--stamp-red);
+  }
+  .grid-card.is-featured .accent-dot {
+    background: var(--stamp-red);
+    box-shadow: 0 0 6px var(--stamp-red);
+  }
+  .grid-card.soon {
+    border: 1.5px dashed var(--ink);
+    box-shadow: none;
+    opacity: 0.45;
+    cursor: default;
+    pointer-events: none;
+  }
+  .grid-card.soon .glyph { opacity: 0.5; }
+  .grid-card.soon .name { color: var(--faded); }
+
 </style>
 </head>
 <body>
@@ -731,308 +958,20 @@
     DAY STREAK
   </div>
 
+  <div class="featured-wrap">
+    <div class="section-label">
+      <span>TODAY'S PICK · <span class="ja">本日</span></span>
+      <span class="count" id="featured-date">--.--.--</span>
+    </div>
+    <a class="featured" id="featured-card" href="#"></a>
+  </div>
+
   <div class="section-label">
     <span>CABINETS · <span class="ja">筐体</span></span>
     <span class="count">11 / 12</span>
   </div>
 
-  <div class="cabinets">
-
-    <a href="games/taphard.html" class="ticket">
-      <div class="stub">
-        <div class="no">№ 01</div>
-        <div class="glyph">強</div>
-        <div class="mini">KYOUDA</div>
-      </div>
-      <div class="body">
-        <div class="row1">
-          <div class="name-block">
-            <div class="name-jp">タップ・ハード</div>
-            <h3 class="name-en">TAP HARD</h3>
-          </div>
-          <div class="price">
-            BEST
-            <span class="v" id="best-taphard">—</span>
-          </div>
-        </div>
-        <div class="desc">tap the orbs, dodge the bombs — combos, waves, chaos.</div>
-        <div class="row2">
-          <span class="tag">¥10 · 3 LIVES</span>
-          <span class="play">PLAY</span>
-        </div>
-      </div>
-    </a>
-
-    <a href="games/react.html" class="ticket">
-      <div class="stub">
-        <div class="no">№ 02</div>
-        <div class="glyph">反</div>
-        <div class="mini">HANSHA</div>
-      </div>
-      <div class="body">
-        <div class="row1">
-          <div class="name-block">
-            <div class="name-jp">リアクト</div>
-            <h3 class="name-en">REACT</h3>
-          </div>
-          <div class="price">
-            BEST
-            <span class="v" id="best-react">—</span>
-          </div>
-        </div>
-        <div class="desc">when the screen turns green — how fast can you really tap?</div>
-        <div class="row2">
-          <span class="tag">¥10 · 1 SHOT</span>
-          <span class="play">PLAY</span>
-        </div>
-      </div>
-    </a>
-
-    <a href="games/memory.html" class="ticket">
-      <div class="stub">
-        <div class="no">№ 03</div>
-        <div class="glyph">記</div>
-        <div class="mini">KIOKU</div>
-      </div>
-      <div class="body">
-        <div class="row1">
-          <div class="name-block">
-            <div class="name-jp">メモリー</div>
-            <h3 class="name-en">MEMORY</h3>
-          </div>
-          <div class="price">
-            BEST
-            <span class="v" id="best-memory">—</span>
-          </div>
-        </div>
-        <div class="desc">watch the pads. repeat the pattern. don't blink.</div>
-        <div class="row2">
-          <span class="tag">¥10 · ∞ ROUNDS</span>
-          <span class="play">PLAY</span>
-        </div>
-      </div>
-    </a>
-
-    <a href="games/snake.html" class="ticket">
-      <div class="stub">
-        <div class="no">№ 04</div>
-        <div class="glyph">蛇</div>
-        <div class="mini">HEBI</div>
-      </div>
-      <div class="body">
-        <div class="row1">
-          <div class="name-block">
-            <div class="name-jp">スネーク</div>
-            <h3 class="name-en">SNAKE</h3>
-          </div>
-          <div class="price">
-            BEST
-            <span class="v" id="best-snake">—</span>
-          </div>
-        </div>
-        <div class="desc">swipe to turn. eat. grow. don't bite yourself, idiot.</div>
-        <div class="row2">
-          <span class="tag">¥10 · SWIPE</span>
-          <span class="play">PLAY</span>
-        </div>
-      </div>
-    </a>
-
-    <a href="games/tiles.html" class="ticket">
-      <div class="stub">
-        <div class="no">№ 05</div>
-        <div class="glyph">黒</div>
-        <div class="mini">KURO</div>
-      </div>
-      <div class="body">
-        <div class="row1">
-          <div class="name-block">
-            <div class="name-jp">タイル</div>
-            <h3 class="name-en">TILES</h3>
-          </div>
-          <div class="price">
-            BEST
-            <span class="v" id="best-tiles">—</span>
-          </div>
-        </div>
-        <div class="desc">tap the black ones. never the white. it speeds up.</div>
-        <div class="row2">
-          <span class="tag">¥10 · 4 LANES</span>
-          <span class="play">PLAY</span>
-        </div>
-      </div>
-    </a>
-
-    <a href="games/stack.html" class="ticket">
-      <div class="stub">
-        <div class="no">№ 06</div>
-        <div class="glyph">積</div>
-        <div class="mini">TSUMI</div>
-      </div>
-      <div class="body">
-        <div class="row1">
-          <div class="name-block">
-            <div class="name-jp">スタック</div>
-            <h3 class="name-en">STACK</h3>
-          </div>
-          <div class="price">
-            BEST
-            <span class="v" id="best-stack">—</span>
-          </div>
-        </div>
-        <div class="desc">drop the block. stay aligned. reach the sky.</div>
-        <div class="row2">
-          <span class="tag">¥10 · 1 TAP</span>
-          <span class="play">PLAY</span>
-        </div>
-      </div>
-    </a>
-
-    <a href="games/flappy.html" class="ticket">
-      <div class="stub">
-        <div class="no">№ 07</div>
-        <div class="glyph">鳥</div>
-        <div class="mini">TORI</div>
-      </div>
-      <div class="body">
-        <div class="row1">
-          <div class="name-block">
-            <div class="name-jp">フラッピー</div>
-            <h3 class="name-en">FLAPPY</h3>
-          </div>
-          <div class="price">
-            BEST
-            <span class="v" id="best-flappy">—</span>
-          </div>
-        </div>
-        <div class="desc">tap to flap. don't kiss the pipes. mind the floor.</div>
-        <div class="row2">
-          <span class="tag">¥10 · TAP</span>
-          <span class="play">PLAY</span>
-        </div>
-      </div>
-    </a>
-
-    <a href="games/whack.html" class="ticket">
-      <div class="stub">
-        <div class="no">№ 08</div>
-        <div class="glyph">叩</div>
-        <div class="mini">TATAKI</div>
-      </div>
-      <div class="body">
-        <div class="row1">
-          <div class="name-block">
-            <div class="name-jp">モグラ</div>
-            <h3 class="name-en">WHACK</h3>
-          </div>
-          <div class="price">
-            BEST
-            <span class="v" id="best-whack">—</span>
-          </div>
-        </div>
-        <div class="desc">moles pop out. tap them. 60 seconds. avoid bombs.</div>
-        <div class="row2">
-          <span class="tag">¥10 · 60s</span>
-          <span class="play">PLAY</span>
-        </div>
-      </div>
-    </a>
-
-    <a href="games/numbers.html" class="ticket">
-      <div class="stub">
-        <div class="no">№ 09</div>
-        <div class="glyph">数</div>
-        <div class="mini">SUUJI</div>
-      </div>
-      <div class="body">
-        <div class="row1">
-          <div class="name-block">
-            <div class="name-jp">数字</div>
-            <h3 class="name-en">2048</h3>
-          </div>
-          <div class="price">
-            BEST
-            <span class="v" id="best-numbers">—</span>
-          </div>
-        </div>
-        <div class="desc">slide, merge, double. reach the 2048 tile.</div>
-        <div class="row2">
-          <span class="tag">¥10 · SWIPE</span>
-          <span class="play">PLAY</span>
-        </div>
-      </div>
-    </a>
-
-    <a href="games/breakout.html" class="ticket">
-      <div class="stub">
-        <div class="no">№ 10</div>
-        <div class="glyph">壊</div>
-        <div class="mini">KOWARE</div>
-      </div>
-      <div class="body">
-        <div class="row1">
-          <div class="name-block">
-            <div class="name-jp">ブレイク</div>
-            <h3 class="name-en">BREAKOUT</h3>
-          </div>
-          <div class="price">
-            BEST
-            <span class="v" id="best-breakout">—</span>
-          </div>
-        </div>
-        <div class="desc">paddle, ball, bricks. clear them all. 5 levels.</div>
-        <div class="row2">
-          <span class="tag">¥10 · 3 LIVES</span>
-          <span class="play">PLAY</span>
-        </div>
-      </div>
-    </a>
-
-    <a href="games/pong.html" class="ticket">
-      <div class="stub">
-        <div class="no">№ 11</div>
-        <div class="glyph">球</div>
-        <div class="mini">TAMA</div>
-      </div>
-      <div class="body">
-        <div class="row1">
-          <div class="name-block">
-            <div class="name-jp">ピンポン · 2P</div>
-            <h3 class="name-en">PONG</h3>
-          </div>
-          <div class="price">
-            ROUNDS
-            <span class="v" id="best-pong">—</span>
-          </div>
-        </div>
-        <div class="desc">two players · one phone · first to 5 wins.</div>
-        <div class="row2">
-          <span class="tag">¥10 · HOT-SEAT</span>
-          <span class="play">PLAY</span>
-        </div>
-      </div>
-    </a>
-
-    <div class="ticket soon">
-      <div class="stub">
-        <div class="no">№ 12</div>
-        <div class="glyph">？</div>
-      </div>
-      <div class="body">
-        <div class="row1">
-          <div class="name-block">
-            <div class="name-jp">近日公開</div>
-            <h3 class="name-en" style="color: var(--faded);">COMING SOON</h3>
-          </div>
-        </div>
-        <div class="desc" style="color: var(--faded-2);">tic-tac-toe · aim trainer · drift · or whatever else.</div>
-        <div class="row2">
-          <span class="tag">OUT OF ORDER</span>
-        </div>
-      </div>
-    </div>
-
-  </div>
+  <div class="grid-cabinets" id="grid-cabinets"></div>
 
   <div class="receipt">
     <div class="receipt-head">
@@ -1128,17 +1067,70 @@
     }
   }
 
-  setBest('best-taphard',  lsGetN('taphard_best'));
-  setBest('best-react',    lsGetN('react_best'),  ' ms');
-  setBest('best-memory',   lsGetN('memory_best'));
-  setBest('best-snake',    lsGetN('snake_best'));
-  setBest('best-tiles',    lsGetN('tiles_best'));
-  setBest('best-stack',    lsGetN('stack_best'));
-  setBest('best-flappy',   lsGetN('flappy_best'));
-  setBest('best-whack',    lsGetN('whack_best'));
-  setBest('best-numbers',  lsGetN('numbers_best'));
-  setBest('best-breakout', lsGetN('breakout_best'));
-  setBest('best-pong',     lsGetN('pong_best'));
+  // ── game catalog ──
+  const GAMES = [
+    { id: 'taphard',  href: 'games/taphard.html',  no: '01', kanji: '強', romaji: 'KYOUDA', katakana: 'タップ・ハード',   name: 'TAP HARD', desc: 'tap orbs · dodge bombs · combos · waves', bestKey: 'taphard_best',  bestSuffix: '',   accent: '--bomb' },
+    { id: 'react',    href: 'games/react.html',    no: '02', kanji: '反', romaji: 'HANSHA', katakana: 'リアクト',         name: 'REACT',    desc: 'wait for green · tap as fast as you can',  bestKey: 'react_best',    bestSuffix: 'ms', accent: '--good' },
+    { id: 'memory',   href: 'games/memory.html',   no: '03', kanji: '記', romaji: 'KIOKU',  katakana: 'メモリー',          name: 'MEMORY',   desc: 'watch the pattern · repeat it · don\'t blink', bestKey: 'memory_best',   bestSuffix: '',   accent: '--slow' },
+    { id: 'snake',    href: 'games/snake.html',    no: '04', kanji: '蛇', romaji: 'HEBI',   katakana: 'スネーク',          name: 'SNAKE',    desc: 'swipe to turn · eat the seed · grow long', bestKey: 'snake_best',    bestSuffix: '',   accent: '--good' },
+    { id: 'tiles',    href: 'games/tiles.html',    no: '05', kanji: '黒', romaji: 'KURO',   katakana: 'タイル',            name: 'TILES',    desc: 'tap the black ones · avoid the white',     bestKey: 'tiles_best',    bestSuffix: '',   accent: '--rare' },
+    { id: 'stack',    href: 'games/stack.html',    no: '06', kanji: '積', romaji: 'TSUMI',  katakana: 'スタック',          name: 'STACK',    desc: 'drop the block · stay aligned · reach the sky', bestKey: 'stack_best',  bestSuffix: '',   accent: '--epic' },
+    { id: 'flappy',   href: 'games/flappy.html',   no: '07', kanji: '鳥', romaji: 'TORI',   katakana: 'フラッピー',         name: 'FLAPPY',   desc: 'tap to flap · don\'t kiss the torii',      bestKey: 'flappy_best',   bestSuffix: '',   accent: '--rare' },
+    { id: 'whack',    href: 'games/whack.html',    no: '08', kanji: '叩', romaji: 'TATAKI', katakana: 'モグラ',            name: 'WHACK',    desc: 'moles pop out · 60 seconds · avoid bombs',  bestKey: 'whack_best',    bestSuffix: '',   accent: '--good' },
+    { id: 'numbers',  href: 'games/numbers.html',  no: '09', kanji: '数', romaji: 'SUUJI',  katakana: '数字',              name: '2048',     desc: 'slide · merge · double · reach 2048',       bestKey: 'numbers_best',  bestSuffix: '',   accent: '--mustard' },
+    { id: 'breakout', href: 'games/breakout.html', no: '10', kanji: '壊', romaji: 'KOWARE', katakana: 'ブレイク',          name: 'BREAKOUT', desc: 'paddle · ball · break the bricks',         bestKey: 'breakout_best', bestSuffix: '',   accent: '--rust' },
+    { id: 'pong',     href: 'games/pong.html',     no: '11', kanji: '球', romaji: 'TAMA',   katakana: 'ピンポン · 2P',     name: 'PONG',     desc: 'two players · one phone · first to 5',     bestKey: 'pong_best',     bestSuffix: '',   accent: '--teal' },
+  ];
+
+  // ── daily-rotating featured pick ──
+  const epochDay = Math.floor(Date.now() / 86400000);
+  const featured = GAMES[epochDay % GAMES.length];
+  const featuredEl = document.getElementById('featured-card');
+  const fBest = lsGetN(featured.bestKey);
+  featuredEl.href = featured.href;
+  featuredEl.innerHTML = `
+    <div class="stub">
+      <div class="no">№ ${featured.no}</div>
+      <div class="glyph">${featured.kanji}</div>
+      <div class="mini">${featured.romaji}</div>
+    </div>
+    <div class="body">
+      <div class="pick-tag">★ TODAY'S PICK · 本日</div>
+      <div class="name-jp">${featured.katakana}</div>
+      <h2 class="name-en">${featured.name}</h2>
+      <div class="desc">${featured.desc}</div>
+      <div class="row2">
+        <div class="price-mini">BEST <span class="v">${fBest > 0 ? fBest + featured.bestSuffix : '—'}</span></div>
+        <span class="play-big">PLAY →</span>
+      </div>
+    </div>
+  `;
+  const fdate = new Date();
+  document.getElementById('featured-date').textContent =
+    `${String(fdate.getFullYear()).slice(-2)}.${String(fdate.getMonth()+1).padStart(2,'0')}.${String(fdate.getDate()).padStart(2,'0')}`;
+
+  // ── tight 3-col grid ──
+  const gridEl = document.getElementById('grid-cabinets');
+  gridEl.innerHTML = GAMES.map(g => {
+    const v = lsGetN(g.bestKey);
+    const isFeatured = g.id === featured.id;
+    return `
+      <a href="${g.href}" class="grid-card ${isFeatured ? 'is-featured' : ''}" style="--card-color: var(${g.accent});">
+        <span class="no">№${g.no}</span>
+        <span class="accent-dot"></span>
+        <div class="glyph">${g.kanji}</div>
+        <div class="name">${g.name}</div>
+        <div class="best">${v > 0 ? '<span class="v">' + v + g.bestSuffix + '</span>' : '—'}</div>
+      </a>
+    `;
+  }).join('') + `
+    <div class="grid-card soon">
+      <span class="no">№12</span>
+      <div class="glyph">？</div>
+      <div class="name">SOON</div>
+      <div class="best">—</div>
+    </div>
+  `;
 
   const totalRuns =
     lsGetN('taphard_runs') + lsGetN('react_runs') + lsGetN('memory_runs') +
