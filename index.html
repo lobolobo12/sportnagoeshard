@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Excuse Machine 3000</title>
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --card: #1a1a2e;
+    --accent: #ff4081;
+    --accent-2: #7c4dff;
+    --text: #f5f5f5;
+    --muted: #a0a0b8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(circle at top, #1a1a2e 0%, #0f0f1a 100%);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  h1 {
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    margin: 0 0 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-align: center;
+    letter-spacing: -1px;
+  }
+  .subtitle {
+    color: var(--muted);
+    margin-bottom: 32px;
+    font-size: 0.95rem;
+    text-align: center;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid #2a2a44;
+    border-radius: 20px;
+    padding: 32px 28px;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .excuse {
+    font-size: clamp(1.1rem, 3vw, 1.4rem);
+    line-height: 1.5;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 16px;
+    background: #0f0f1a;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    transition: transform 0.2s;
+  }
+  .excuse.shake { animation: shake 0.4s; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+  }
+  button {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,64,129,0.3); }
+  button:active { transform: translateY(0); }
+  button.secondary {
+    background: #2a2a44;
+    color: var(--text);
+  }
+  .category {
+    display: inline-block;
+    background: rgba(124, 77, 255, 0.2);
+    color: var(--accent-2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin-bottom: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .counter {
+    color: var(--muted);
+    margin-top: 24px;
+    font-size: 0.85rem;
+  }
+  footer {
+    margin-top: 32px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <h1>The Excuse Machine 3000</h1>
+  <p class="subtitle">Get out of literally anything. Backed by zero science.</p>
+
+  <div class="card">
+    <div class="category" id="category">Tap a button</div>
+    <div class="excuse" id="excuse">Why are you here? Pick a situation below and let the machine cook.</div>
+    <div class="controls">
+      <button onclick="generate('work')">Work</button>
+      <button onclick="generate('school')">School</button>
+      <button onclick="generate('date')">Date</button>
+      <button onclick="generate('gym')">Gym</button>
+      <button onclick="generate('family')">Family</button>
+      <button onclick="generate('random')" class="secondary">Surprise me</button>
+    </div>
+    <div class="counter" id="counter">Excuses generated: 0</div>
+  </div>
+
+  <footer>built when bored · no excuses are guaranteed to work</footer>
+
+<script>
+  const subjects = [
+    "my neighbor's cat", "my landlord", "a guy at the bus stop",
+    "my dentist", "my pet rock", "a pigeon", "my grandma",
+    "the ghost in my closet", "my barber", "a Ukrainian uber driver",
+    "my therapist", "an emotionally unstable raccoon", "my plumber",
+    "the mailman", "my sleep paralysis demon"
+  ];
+
+  const events = [
+    "set my kitchen on fire", "got stuck in an elevator with a mime",
+    "started speaking only in haiku", "joined a cult (briefly)",
+    "won a hot dog eating contest", "was abducted by very polite aliens",
+    "fainted in a Costco", "got bit by a goose",
+    "accidentally married someone in Vegas", "moved to Bulgaria",
+    "developed a sudden allergy to Wi-Fi", "had a spiritual awakening at a Taco Bell",
+    "got hired by the FBI on the spot", "discovered they're my long-lost twin",
+    "is being chased by bees"
+  ];
+
+  const consequences = [
+    "and now I have to sit perfectly still for 6 hours",
+    "and legally I can't talk about it",
+    "and my insurance won't cover anything until Monday",
+    "and the police are involved (it's fine)",
+    "and I need to attend a mandatory seminar on emotional regulation",
+    "and I'm not allowed to be near loud noises",
+    "and my horoscope said I shouldn't leave the house",
+    "and there's a court order involved",
+    "and I'm currently on a juice cleanse out of solidarity",
+    "and honestly I just don't want to explain it again",
+    "and my chakras are completely misaligned",
+    "and the vet said I need to monitor him for swelling"
+  ];
+
+  const workOpeners = [
+    "I can't come in today because", "I'll be late because",
+    "I need to leave early because", "I can't take that meeting because"
+  ];
+  const schoolOpeners = [
+    "I didn't do my homework because", "I missed class because",
+    "I can't make the group project because", "I was late because"
+  ];
+  const dateOpeners = [
+    "I have to cancel our date because", "I'll be 2 hours late because",
+    "We need to reschedule because", "I can't make dinner because"
+  ];
+  const gymOpeners = [
+    "I can't hit the gym today because", "I'm skipping leg day because",
+    "I can't make our workout because", "I'm taking a rest week because"
+  ];
+  const familyOpeners = [
+    "I can't make the family dinner because", "I'll miss Christmas because",
+    "I can't pick you up from the airport because", "I can't babysit because"
+  ];
+
+  const openersByCategory = {
+    work: workOpeners,
+    school: schoolOpeners,
+    date: dateOpeners,
+    gym: gymOpeners,
+    family: familyOpeners
+  };
+
+  const categoryLabels = {
+    work: "Work Excuse",
+    school: "School Excuse",
+    date: "Date Excuse",
+    gym: "Gym Excuse",
+    family: "Family Excuse"
+  };
+
+  let count = 0;
+
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function generate(category) {
+    if (category === 'random') {
+      const keys = Object.keys(openersByCategory);
+      category = keys[Math.floor(Math.random() * keys.length)];
+    }
+    const opener = pick(openersByCategory[category]);
+    const subject = pick(subjects);
+    const event = pick(events);
+    const consequence = pick(consequences);
+
+    const excuse = `${opener} ${subject} ${event}, ${consequence}.`;
+
+    const excuseEl = document.getElementById('excuse');
+    const categoryEl = document.getElementById('category');
+    excuseEl.textContent = excuse;
+    categoryEl.textContent = categoryLabels[category];
+
+    excuseEl.classList.remove('shake');
+    void excuseEl.offsetWidth;
+    excuseEl.classList.add('shake');
+
+    count++;
+    document.getElementById('counter').textContent = `Excuses generated: ${count}`;
+  }
+</script>
+</body>
+</html>
