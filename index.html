@@ -586,7 +586,7 @@
 
     <div class="marquee-meta">
       <span>EST. 2026</span>
-      <span class="corners">07 CABINETS</span>
+      <span class="corners">10 CABINETS</span>
       <span>TOKYO · ∞</span>
     </div>
   </header>
@@ -599,7 +599,7 @@
 
   <div class="section-label">
     <span>CABINETS · <span class="ja">筐体</span></span>
-    <span class="count">07 / 08</span>
+    <span class="count">10 / 11</span>
   </div>
 
   <div class="cabinets">
@@ -779,9 +779,84 @@
       </div>
     </a>
 
-    <div class="ticket soon">
+    <a href="games/whack.html" class="ticket">
       <div class="stub">
         <div class="no">№ 08</div>
+        <div class="glyph">叩</div>
+        <div class="mini">TATAKI</div>
+      </div>
+      <div class="body">
+        <div class="row1">
+          <div class="name-block">
+            <div class="name-jp">モグラ</div>
+            <h3 class="name-en">WHACK</h3>
+          </div>
+          <div class="price">
+            BEST
+            <span class="v" id="best-whack">—</span>
+          </div>
+        </div>
+        <div class="desc">moles pop out. tap them. 60 seconds. avoid bombs.</div>
+        <div class="row2">
+          <span class="tag">¥10 · 60s</span>
+          <span class="play">PLAY</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="games/numbers.html" class="ticket">
+      <div class="stub">
+        <div class="no">№ 09</div>
+        <div class="glyph">数</div>
+        <div class="mini">SUUJI</div>
+      </div>
+      <div class="body">
+        <div class="row1">
+          <div class="name-block">
+            <div class="name-jp">数字</div>
+            <h3 class="name-en">2048</h3>
+          </div>
+          <div class="price">
+            BEST
+            <span class="v" id="best-numbers">—</span>
+          </div>
+        </div>
+        <div class="desc">slide, merge, double. reach the 2048 tile.</div>
+        <div class="row2">
+          <span class="tag">¥10 · SWIPE</span>
+          <span class="play">PLAY</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="games/breakout.html" class="ticket">
+      <div class="stub">
+        <div class="no">№ 10</div>
+        <div class="glyph">壊</div>
+        <div class="mini">KOWARE</div>
+      </div>
+      <div class="body">
+        <div class="row1">
+          <div class="name-block">
+            <div class="name-jp">ブレイク</div>
+            <h3 class="name-en">BREAKOUT</h3>
+          </div>
+          <div class="price">
+            BEST
+            <span class="v" id="best-breakout">—</span>
+          </div>
+        </div>
+        <div class="desc">paddle, ball, bricks. clear them all. 5 levels.</div>
+        <div class="row2">
+          <span class="tag">¥10 · 3 LIVES</span>
+          <span class="play">PLAY</span>
+        </div>
+      </div>
+    </a>
+
+    <div class="ticket soon">
+      <div class="stub">
+        <div class="no">№ 11</div>
         <div class="glyph">？</div>
       </div>
       <div class="body">
@@ -791,7 +866,7 @@
             <h3 class="name-en" style="color: var(--faded);">COMING SOON</h3>
           </div>
         </div>
-        <div class="desc" style="color: var(--faded-2);">whack-a-mole · 2048 · breakout · or whatever else.</div>
+        <div class="desc" style="color: var(--faded-2);">pong · aim trainer · drift · or whatever else.</div>
         <div class="row2">
           <span class="tag">OUT OF ORDER</span>
         </div>
@@ -859,18 +934,22 @@
     }
   }
 
-  setBest('best-taphard', lsGetN('taphard_best'));
-  setBest('best-react',   lsGetN('react_best'),  ' ms');
-  setBest('best-memory',  lsGetN('memory_best'));
-  setBest('best-snake',   lsGetN('snake_best'));
-  setBest('best-tiles',   lsGetN('tiles_best'));
-  setBest('best-stack',   lsGetN('stack_best'));
-  setBest('best-flappy',  lsGetN('flappy_best'));
+  setBest('best-taphard',  lsGetN('taphard_best'));
+  setBest('best-react',    lsGetN('react_best'),  ' ms');
+  setBest('best-memory',   lsGetN('memory_best'));
+  setBest('best-snake',    lsGetN('snake_best'));
+  setBest('best-tiles',    lsGetN('tiles_best'));
+  setBest('best-stack',    lsGetN('stack_best'));
+  setBest('best-flappy',   lsGetN('flappy_best'));
+  setBest('best-whack',    lsGetN('whack_best'));
+  setBest('best-numbers',  lsGetN('numbers_best'));
+  setBest('best-breakout', lsGetN('breakout_best'));
 
   const totalRuns =
     lsGetN('taphard_runs') + lsGetN('react_runs') + lsGetN('memory_runs') +
     lsGetN('snake_runs') + lsGetN('tiles_runs') + lsGetN('stack_runs') +
-    lsGetN('flappy_runs');
+    lsGetN('flappy_runs') + lsGetN('whack_runs') + lsGetN('numbers_runs') +
+    lsGetN('breakout_runs');
   document.getElementById('lt-runs').textContent = String(totalRuns).padStart(3, '0');
 
   const totalTaps = lsGetN('taphard_taps');
