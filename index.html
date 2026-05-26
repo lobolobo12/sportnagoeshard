@@ -5,308 +5,838 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
-<meta name="theme-color" content="#0a0a14" />
-<title>HARD ARCADE</title>
+<meta name="theme-color" content="#f6f1e6" />
+<title>HARD ARCADE · ハードアーケード</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@400;500;700;800&family=Yuji+Boku&family=JetBrains+Mono:wght@400;500;700&family=DotGothic16&display=swap" rel="stylesheet" />
+
 <style>
   :root {
-    --bg: #0a0a14;
-    --card: #14142b;
-    --text: #ffffff;
-    --muted: #888aa0;
-    --accent: #00e5ff;
-    --rare: #ffea00;
-    --bomb: #ff1744;
-    --mult: #ff4081;
-    --slow: #b388ff;
-    --good: #00e676;
-    --wave: #ff6e40;
+    --paper:        #f4ede0;
+    --paper-2:      #ece4d1;
+    --paper-3:      #e0d5bb;
+    --ink:          #1c1a16;
+    --ink-soft:     #3a352d;
+    --faded:        #8a7e6a;
+    --faded-2:      #b3a78f;
+    --rust:         #c84a1d;
+    --rust-dark:    #9a3514;
+    --stamp-red:    #b32d23;
+    --mustard:      #c69a2a;
+    --olive:        #6b6a3a;
+    --teal:         #2f6a6a;
+    --rule:         rgba(28,26,22,0.18);
+    --rule-strong:  rgba(28,26,22,0.5);
+
+    --f-display: 'RocknRoll One', 'Noto Sans JP', system-ui, sans-serif;
+    --f-mincho:  'Shippori Mincho', 'Times New Roman', serif;
+    --f-jp:      'Noto Sans JP', system-ui, sans-serif;
+    --f-mono:    'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+    --f-pixel:   'DotGothic16', monospace;
+    --f-brush:   'Yuji Boku', serif;
   }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
-    margin: 0; padding: 0; min-height: 100%;
-    background: var(--bg); color: var(--text);
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    margin: 0; padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--f-jp);
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
     overscroll-behavior: none;
+    min-height: 100%;
   }
   body {
     background:
-      radial-gradient(ellipse at top left, rgba(0,229,255,0.15) 0%, transparent 50%),
-      radial-gradient(ellipse at bottom right, rgba(255,64,129,0.12) 0%, transparent 50%),
-      radial-gradient(ellipse at top, #1a1a3a 0%, #0a0a14 70%);
+      /* paper grain via layered radial dots */
+      radial-gradient(circle at 17% 23%, rgba(180,160,120,0.18) 0%, transparent 1.2%),
+      radial-gradient(circle at 73% 51%, rgba(180,160,120,0.15) 0%, transparent 1%),
+      radial-gradient(circle at 41% 81%, rgba(180,160,120,0.16) 0%, transparent 1.3%),
+      radial-gradient(circle at 88% 12%, rgba(180,160,120,0.12) 0%, transparent 1%),
+      radial-gradient(ellipse at top, var(--paper) 0%, var(--paper-2) 100%);
+    background-attachment: fixed;
+    padding: env(safe-area-inset-top, 24px) 0 env(safe-area-inset-bottom, 32px);
     min-height: 100vh;
-    padding: env(safe-area-inset-top, 20px) 16px env(safe-area-inset-bottom, 24px);
+    position: relative;
+  }
+  /* CRT scanlines + vignette overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    background:
+      repeating-linear-gradient(
+        0deg,
+        rgba(28,26,22,0.035) 0px,
+        rgba(28,26,22,0.035) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+    mix-blend-mode: multiply;
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 101;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(28,26,22,0.18) 100%);
   }
 
   .wrap {
-    max-width: 480px;
+    max-width: 520px;
     margin: 0 auto;
-    padding: 20px 0;
-  }
-
-  header {
-    text-align: center;
-    margin-bottom: 28px;
-  }
-  .logo {
-    font-size: clamp(2.6rem, 12vw, 4rem);
-    font-weight: 900;
-    letter-spacing: -2px;
-    line-height: 0.9;
-    margin: 0 0 8px;
-    background: linear-gradient(135deg, var(--accent), var(--rare), var(--bomb));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-shadow: 0 0 60px rgba(0,229,255,0.3);
-  }
-  .tagline {
-    color: var(--muted);
-    font-size: 0.8rem;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-  }
-
-  .games-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 22px;
-  }
-  .game-card {
-    background: var(--card);
-    border: 1px solid #2a2a44;
-    border-radius: 16px;
-    padding: 14px;
-    text-decoration: none;
-    color: inherit;
-    display: flex;
-    flex-direction: column;
-    cursor: pointer;
+    padding: 24px 18px 32px;
     position: relative;
-    overflow: hidden;
-    transition: transform 0.12s, border-color 0.2s, box-shadow 0.2s;
-    min-height: 130px;
   }
-  .game-card:active { transform: scale(0.97); }
-  .game-card::before {
+
+  /* ─── header / logotype ─── */
+  .marquee {
+    border: 1.5px solid var(--ink);
+    padding: 18px 18px 14px;
+    position: relative;
+    background: var(--paper);
+    box-shadow:
+      4px 4px 0 var(--ink),
+      inset 0 0 0 4px var(--paper),
+      inset 0 0 0 5px var(--rule);
+  }
+  .marquee::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--card-color);
-    box-shadow: 0 0 12px var(--card-color);
+    inset: 5px;
+    border: 0.5px solid var(--rule-strong);
+    pointer-events: none;
   }
-  .game-card.taphard { --card-color: var(--bomb); }
-  .game-card.react   { --card-color: var(--good); }
-  .game-card.memory  { --card-color: var(--slow); }
-  .game-card.snake   { --card-color: var(--good); }
-  .game-card.tiles   { --card-color: var(--rare); }
-  .game-card.stack   { --card-color: var(--accent); }
-  .game-card.flappy  { --card-color: var(--rare); }
-
-  .icon {
-    width: 44px; height: 44px;
-    border-radius: 12px;
+  .marquee-top {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    background: rgba(255,255,255,0.05);
-    color: var(--card-color);
-    text-shadow: 0 0 12px currentColor;
-    margin-bottom: 10px;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--faded);
+    text-transform: uppercase;
+    margin-bottom: 6px;
   }
-  .game-name {
-    font-size: 1.05rem;
-    font-weight: 900;
-    letter-spacing: -0.5px;
-    margin: 0 0 2px;
+  .marquee-top .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--rust);
+    display: inline-block;
+    margin-right: 6px;
+    box-shadow: 0 0 6px var(--rust);
+    animation: blink 2.4s infinite;
+    vertical-align: middle;
   }
-  .game-desc {
-    color: var(--muted);
-    font-size: 0.7rem;
-    line-height: 1.3;
-    margin: 0 0 8px;
-    flex: 1;
+  @keyframes blink {
+    0%, 70%, 100% { opacity: 1; }
+    72%, 90%    { opacity: 0.15; }
   }
-  .best-row {
+  .logotype {
+    font-family: var(--f-display);
+    font-size: clamp(2.3rem, 9vw, 3.2rem);
+    line-height: 0.95;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    margin: 0;
+    text-transform: none;
+  }
+  .logotype .ja {
+    display: block;
+    font-family: var(--f-display);
+    color: var(--rust);
+    text-shadow:
+      2px 2px 0 var(--paper),
+      4px 4px 0 var(--ink);
+  }
+  .logotype .en {
+    display: block;
+    font-family: var(--f-mincho);
+    font-weight: 800;
+    font-size: 0.42em;
+    letter-spacing: 0.14em;
+    color: var(--ink);
+    margin-top: 6px;
+    border-top: 1px solid var(--rule);
+    padding-top: 6px;
+  }
+  .marquee-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.65rem;
-    color: var(--muted);
-    letter-spacing: 1.5px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--rule);
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.15em;
+    color: var(--ink-soft);
     text-transform: uppercase;
-    margin-top: auto;
   }
-  .best-row .v {
-    color: var(--card-color);
-    font-weight: 800;
-    font-size: 0.85rem;
-    letter-spacing: 0;
+  .marquee-meta .corners {
+    color: var(--rust-dark);
+    font-weight: 700;
   }
-  .best-row .v.dash { color: var(--muted); }
 
-  .coming-soon {
-    background: transparent;
-    border: 1px dashed #2a2a44;
-    color: var(--muted);
-    cursor: default;
-    opacity: 0.6;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+  /* corner kanji decoration on marquee */
+  .kanji-corner {
+    position: absolute;
+    font-family: var(--f-brush);
+    color: var(--stamp-red);
+    opacity: 0.85;
+    pointer-events: none;
+    line-height: 1;
   }
-  .coming-soon::before { display: none; }
-  .coming-soon:active { transform: none; }
-  .coming-soon .icon { color: var(--muted); text-shadow: none; }
+  .kanji-corner.tl { top: -14px; left: -10px; font-size: 32px; transform: rotate(-8deg); }
+  .kanji-corner.br { bottom: -10px; right: -8px; font-size: 28px; transform: rotate(6deg); }
 
-  .lifetime {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid #1f1f3a;
-    border-radius: 14px;
-    padding: 14px 18px;
-    margin-bottom: 16px;
-  }
-  .lifetime .title {
-    font-size: 0.7rem;
-    color: var(--muted);
-    letter-spacing: 2px;
+  /* ─── streak stamp ─── */
+  .streak-stamp {
+    margin: 22px auto 0;
+    width: max-content;
+    transform: rotate(-3deg);
+    border: 2.5px solid var(--stamp-red);
+    color: var(--stamp-red);
+    padding: 6px 14px 4px;
+    font-family: var(--f-display);
+    font-size: 13px;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    margin-bottom: 10px;
+    position: relative;
+    background: rgba(180,40,30,0.04);
+    box-shadow: inset 0 0 0 4px var(--paper), inset 0 0 0 5px var(--stamp-red);
   }
-  .lifetime .grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    text-align: center;
-  }
-  .lifetime .stat .v {
-    font-size: 1.3rem;
+  .streak-stamp .ja {
+    font-family: var(--f-jp);
     font-weight: 900;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    display: block;
+    text-align: center;
+    color: var(--stamp-red);
+    opacity: 0.85;
   }
-  .lifetime .stat .l {
-    color: var(--muted);
-    font-size: 0.6rem;
-    letter-spacing: 1.5px;
+  .streak-stamp .big {
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 1;
+    color: var(--stamp-red);
+  }
+  .streak-stamp.hidden { display: none; }
+
+  /* ─── section label ─── */
+  .section-label {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 28px 2px 12px;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.24em;
     text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .section-label .ja {
+    font-family: var(--f-jp);
+    font-weight: 700;
+    color: var(--faded);
+    letter-spacing: 0.1em;
+  }
+  .section-label .count {
+    color: var(--rust-dark);
+    font-weight: 700;
+  }
+
+  /* ─── ticket card grid ─── */
+  .cabinets {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* TICKET STUB card */
+  .ticket {
+    position: relative;
+    background: var(--paper);
+    display: grid;
+    grid-template-columns: 78px 1fr;
+    text-decoration: none;
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: transform 0.1s, box-shadow 0.1s;
+    overflow: hidden;
+  }
+  .ticket:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--ink);
+  }
+  /* perforated divider between stub and body */
+  .ticket::before {
+    content: '';
+    position: absolute;
+    left: 78px;
+    top: 0; bottom: 0;
+    width: 0;
+    border-left: 1px dashed var(--ink);
+    opacity: 0.55;
+  }
+  /* punch holes */
+  .ticket::after {
+    content: '';
+    position: absolute;
+    left: 78px;
+    top: -7px;
+    width: 14px; height: 14px;
+    margin-left: -7px;
+    border-radius: 50%;
+    background: var(--paper-2);
+    border: 1.5px solid var(--ink);
+    box-shadow:
+      0 calc(100% + 14px) 0 -1px var(--paper-2),
+      0 calc(100% + 14px) 0 0.5px var(--ink);
+  }
+
+  .ticket .stub {
+    background: var(--ink);
+    color: var(--paper);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 6px 14px;
+    position: relative;
+  }
+  .ticket .stub .no {
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    color: var(--paper-3);
+    opacity: 0.7;
+  }
+  .ticket .stub .glyph {
+    font-family: var(--f-brush);
+    font-size: 42px;
+    line-height: 1;
+    color: var(--paper);
+    margin: 6px 0;
+  }
+  .ticket .stub .mini {
+    font-family: var(--f-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.2em;
+    color: var(--rust);
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.85;
+  }
+
+  .ticket .body {
+    padding: 12px 14px 12px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 110px;
+    position: relative;
+  }
+  .ticket .body .row1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .ticket .name-block { min-width: 0; flex: 1; }
+  .ticket .name-jp {
+    font-family: var(--f-jp);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--faded);
+    margin-bottom: 1px;
+  }
+  .ticket .name-en {
+    font-family: var(--f-display);
+    font-size: 22px;
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .ticket .price {
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    color: var(--ink-soft);
+    text-align: right;
+    flex-shrink: 0;
+    border-left: 1px solid var(--rule);
+    padding-left: 8px;
+  }
+  .ticket .price .v {
+    display: block;
+    font-weight: 700;
+    color: var(--rust);
+    font-size: 13px;
+    letter-spacing: 0.04em;
     margin-top: 2px;
   }
-
-  .streak {
-    text-align: center;
-    margin-bottom: 16px;
+  .ticket .price .v.dash { color: var(--faded-2); }
+  .ticket .desc {
+    font-family: var(--f-mincho);
+    font-style: italic;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--ink-soft);
+    margin: 8px 0 0;
   }
-  .streak-pill {
-    display: inline-block;
-    background: linear-gradient(135deg, var(--bomb), var(--mult));
-    color: #fff;
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 800;
-    letter-spacing: 1.5px;
+  .ticket .row2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--rule);
+  }
+  .ticket .row2 .tag {
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.2em;
+    color: var(--faded);
     text-transform: uppercase;
-    box-shadow: 0 0 20px rgba(255,23,68,0.4);
+  }
+  .ticket .play {
+    font-family: var(--f-display);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    color: var(--paper);
+    background: var(--rust);
+    padding: 4px 12px 3px;
+    text-transform: uppercase;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .ticket .play::after {
+    content: ' →';
   }
 
-  footer {
-    text-align: center;
-    margin-top: 20px;
-    color: var(--muted);
-    font-size: 0.7rem;
-    letter-spacing: 1.5px;
+  /* "coming soon" ticket — dashed border, no shadow */
+  .ticket.soon {
+    border: 1.5px dashed var(--ink);
+    box-shadow: none;
+    opacity: 0.55;
+    cursor: default;
   }
-  footer a { color: var(--muted); }
+  .ticket.soon:active { transform: none; box-shadow: none; }
+  .ticket.soon .stub { background: transparent; color: var(--ink); border-right: 1.5px dashed var(--ink); }
+  .ticket.soon .stub .glyph { color: var(--ink); opacity: 0.5; }
+  .ticket.soon .stub .no { color: var(--faded); }
+  .ticket.soon .stub .mini { display: none; }
+  .ticket.soon .play { display: none; }
+  .ticket.soon::after {
+    background: var(--paper);
+    border: 1.5px dashed var(--ink);
+    box-shadow:
+      0 calc(100% + 14px) 0 -1px var(--paper),
+      0 calc(100% + 14px) 0 0.5px var(--ink);
+  }
+
+  /* ─── receipt block (lifetime stats) ─── */
+  .receipt {
+    margin-top: 28px;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    padding: 16px 18px;
+    box-shadow: 3px 3px 0 var(--ink);
+    position: relative;
+  }
+  .receipt::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: 0; right: 0;
+    height: 6px;
+    background:
+      linear-gradient(135deg, var(--ink) 25%, transparent 25%) 0 0/8px 6px,
+      linear-gradient(225deg, var(--ink) 25%, transparent 25%) 0 0/8px 6px;
+    background-position: 0 -1px;
+  }
+  .receipt::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 6px;
+    background:
+      linear-gradient(45deg, var(--ink) 25%, transparent 25%) 0 100%/8px 6px,
+      linear-gradient(315deg, var(--ink) 25%, transparent 25%) 0 100%/8px 6px;
+    background-position: 0 1px;
+  }
+  .receipt-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    border-bottom: 1px dashed var(--rule);
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .receipt-head .ja {
+    font-family: var(--f-jp);
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--rust);
+  }
+  .receipt-row {
+    display: flex;
+    align-items: baseline;
+    font-family: var(--f-mono);
+    font-size: 12px;
+    color: var(--ink);
+    line-height: 1.9;
+  }
+  .receipt-row .lbl {
+    font-size: 10.5px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .receipt-row .leader {
+    flex: 1;
+    border-bottom: 1px dotted var(--rule-strong);
+    margin: 0 6px;
+    transform: translateY(-4px);
+  }
+  .receipt-row .val {
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+  }
+
+  /* ─── footer ─── */
+  footer {
+    margin-top: 24px;
+    padding: 14px 0 0;
+    border-top: 1px dashed var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--faded);
+  }
+  footer a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 1px;
+  }
+  footer .ja {
+    font-family: var(--f-jp);
+    color: var(--rust-dark);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  /* tiny floating sticker motif */
+  .sticker {
+    position: absolute;
+    font-family: var(--f-brush);
+    color: var(--mustard);
+    pointer-events: none;
+    opacity: 0.5;
+    z-index: 1;
+  }
+  .sticker.s1 { top: 200px; right: -2px; font-size: 38px; transform: rotate(12deg); color: var(--olive); }
+  .sticker.s2 { top: 520px; left: -6px; font-size: 32px; transform: rotate(-14deg); color: var(--teal); }
+  .sticker.s3 { bottom: 220px; right: 0; font-size: 36px; transform: rotate(8deg); color: var(--mustard); }
+
+  @media (min-width: 540px) {
+    .cabinets { grid-template-columns: 1fr 1fr; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1 class="logo">HARD<br/>ARCADE</h1>
-    <div class="tagline">7 games · built when bored</div>
+
+  <header class="marquee">
+    <span class="kanji-corner tl">遊</span>
+    <span class="kanji-corner br">場</span>
+
+    <div class="marquee-top">
+      <span><span class="dot"></span>NOW PLAYING</span>
+      <span>NO. 001 / 円 ¥100</span>
+    </div>
+
+    <h1 class="logotype">
+      <span class="ja">ハードアーケード</span>
+      <span class="en">HARD · ARCADE · 強</span>
+    </h1>
+
+    <div class="marquee-meta">
+      <span>EST. 二〇二六</span>
+      <span class="corners">07 CABINETS</span>
+      <span>TOKYO · ∞</span>
+    </div>
   </header>
 
-  <div class="streak" id="streak-wrap"></div>
-
-  <div class="games-grid">
-    <a href="games/taphard.html" class="game-card taphard">
-      <div class="icon">💥</div>
-      <div class="game-name">TAP HARD</div>
-      <div class="game-desc">Tap orbs · dodge bombs · combos</div>
-      <div class="best-row"><span>Best</span><span class="v" id="best-taphard">—</span></div>
-    </a>
-
-    <a href="games/react.html" class="game-card react">
-      <div class="icon">⚡</div>
-      <div class="game-name">REACT</div>
-      <div class="game-desc">Wait for green · tap fast</div>
-      <div class="best-row"><span>Best</span><span class="v" id="best-react">—</span></div>
-    </a>
-
-    <a href="games/memory.html" class="game-card memory">
-      <div class="icon">🧠</div>
-      <div class="game-name">MEMORY</div>
-      <div class="game-desc">Repeat the color pattern</div>
-      <div class="best-row"><span>Best</span><span class="v" id="best-memory">—</span></div>
-    </a>
-
-    <a href="games/snake.html" class="game-card snake">
-      <div class="icon">🐍</div>
-      <div class="game-name">SNAKE</div>
-      <div class="game-desc">Swipe to turn · eat · grow</div>
-      <div class="best-row"><span>Best</span><span class="v" id="best-snake">—</span></div>
-    </a>
-
-    <a href="games/tiles.html" class="game-card tiles">
-      <div class="icon">⬛</div>
-      <div class="game-name">TILES</div>
-      <div class="game-desc">Tap black · avoid white</div>
-      <div class="best-row"><span>Best</span><span class="v" id="best-tiles">—</span></div>
-    </a>
-
-    <a href="games/stack.html" class="game-card stack">
-      <div class="icon">🟦</div>
-      <div class="game-name">STACK</div>
-      <div class="game-desc">Tap to drop · stay aligned</div>
-      <div class="best-row"><span>Best</span><span class="v" id="best-stack">—</span></div>
-    </a>
-
-    <a href="games/flappy.html" class="game-card flappy">
-      <div class="icon">🐤</div>
-      <div class="game-name">FLAPPY</div>
-      <div class="game-desc">Tap to flap · dodge pipes</div>
-      <div class="best-row"><span>Best</span><span class="v" id="best-flappy">—</span></div>
-    </a>
-
-    <div class="game-card coming-soon">
-      <div class="icon">+</div>
-      <div class="game-name" style="color: var(--muted);">more soon</div>
-      <div class="game-desc">whack-a-mole · 2048 · breakout</div>
-    </div>
+  <div class="streak-stamp hidden" id="streak-stamp">
+    <span class="ja">連続プレイ</span>
+    <span class="big" id="streak-num">0</span>
+    DAY STREAK
   </div>
 
-  <div class="lifetime">
-    <div class="title">Lifetime</div>
-    <div class="grid">
-      <div class="stat">
-        <div class="v" id="lt-runs">0</div>
-        <div class="l">Runs</div>
+  <div class="section-label">
+    <span>CABINETS · <span class="ja">筐体</span></span>
+    <span class="count">07 / 08</span>
+  </div>
+
+  <div class="cabinets">
+
+    <a href="games/taphard.html" class="ticket">
+      <div class="stub">
+        <div class="no">№ 01</div>
+        <div class="glyph">強</div>
+        <div class="mini">KYOUDA</div>
       </div>
-      <div class="stat">
-        <div class="v" id="lt-taps">0</div>
-        <div class="l">Taps</div>
+      <div class="body">
+        <div class="row1">
+          <div class="name-block">
+            <div class="name-jp">タップ・ハード</div>
+            <h3 class="name-en">TAP HARD</h3>
+          </div>
+          <div class="price">
+            BEST
+            <span class="v" id="best-taphard">—</span>
+          </div>
+        </div>
+        <div class="desc">tap the orbs, dodge the bombs — combos, waves, chaos.</div>
+        <div class="row2">
+          <span class="tag">¥10 · 3 LIVES</span>
+          <span class="play">PLAY</span>
+        </div>
       </div>
-      <div class="stat">
-        <div class="v" id="lt-ach">0</div>
-        <div class="l">★ Achievements</div>
+    </a>
+
+    <a href="games/react.html" class="ticket">
+      <div class="stub">
+        <div class="no">№ 02</div>
+        <div class="glyph">反</div>
+        <div class="mini">HANSHA</div>
       </div>
+      <div class="body">
+        <div class="row1">
+          <div class="name-block">
+            <div class="name-jp">リアクト</div>
+            <h3 class="name-en">REACT</h3>
+          </div>
+          <div class="price">
+            BEST
+            <span class="v" id="best-react">—</span>
+          </div>
+        </div>
+        <div class="desc">when the screen turns green — how fast can you really tap?</div>
+        <div class="row2">
+          <span class="tag">¥10 · 1 SHOT</span>
+          <span class="play">PLAY</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="games/memory.html" class="ticket">
+      <div class="stub">
+        <div class="no">№ 03</div>
+        <div class="glyph">記</div>
+        <div class="mini">KIOKU</div>
+      </div>
+      <div class="body">
+        <div class="row1">
+          <div class="name-block">
+            <div class="name-jp">メモリー</div>
+            <h3 class="name-en">MEMORY</h3>
+          </div>
+          <div class="price">
+            BEST
+            <span class="v" id="best-memory">—</span>
+          </div>
+        </div>
+        <div class="desc">watch the pads. repeat the pattern. don't blink.</div>
+        <div class="row2">
+          <span class="tag">¥10 · ∞ ROUNDS</span>
+          <span class="play">PLAY</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="games/snake.html" class="ticket">
+      <div class="stub">
+        <div class="no">№ 04</div>
+        <div class="glyph">蛇</div>
+        <div class="mini">HEBI</div>
+      </div>
+      <div class="body">
+        <div class="row1">
+          <div class="name-block">
+            <div class="name-jp">スネーク</div>
+            <h3 class="name-en">SNAKE</h3>
+          </div>
+          <div class="price">
+            BEST
+            <span class="v" id="best-snake">—</span>
+          </div>
+        </div>
+        <div class="desc">swipe to turn. eat. grow. don't bite yourself, idiot.</div>
+        <div class="row2">
+          <span class="tag">¥10 · SWIPE</span>
+          <span class="play">PLAY</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="games/tiles.html" class="ticket">
+      <div class="stub">
+        <div class="no">№ 05</div>
+        <div class="glyph">黒</div>
+        <div class="mini">KURO</div>
+      </div>
+      <div class="body">
+        <div class="row1">
+          <div class="name-block">
+            <div class="name-jp">タイル</div>
+            <h3 class="name-en">TILES</h3>
+          </div>
+          <div class="price">
+            BEST
+            <span class="v" id="best-tiles">—</span>
+          </div>
+        </div>
+        <div class="desc">tap the black ones. never the white. it speeds up.</div>
+        <div class="row2">
+          <span class="tag">¥10 · 4 LANES</span>
+          <span class="play">PLAY</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="games/stack.html" class="ticket">
+      <div class="stub">
+        <div class="no">№ 06</div>
+        <div class="glyph">積</div>
+        <div class="mini">TSUMI</div>
+      </div>
+      <div class="body">
+        <div class="row1">
+          <div class="name-block">
+            <div class="name-jp">スタック</div>
+            <h3 class="name-en">STACK</h3>
+          </div>
+          <div class="price">
+            BEST
+            <span class="v" id="best-stack">—</span>
+          </div>
+        </div>
+        <div class="desc">drop the block. stay aligned. reach the sky.</div>
+        <div class="row2">
+          <span class="tag">¥10 · 1 TAP</span>
+          <span class="play">PLAY</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="games/flappy.html" class="ticket">
+      <div class="stub">
+        <div class="no">№ 07</div>
+        <div class="glyph">鳥</div>
+        <div class="mini">TORI</div>
+      </div>
+      <div class="body">
+        <div class="row1">
+          <div class="name-block">
+            <div class="name-jp">フラッピー</div>
+            <h3 class="name-en">FLAPPY</h3>
+          </div>
+          <div class="price">
+            BEST
+            <span class="v" id="best-flappy">—</span>
+          </div>
+        </div>
+        <div class="desc">tap to flap. don't kiss the pipes. mind the floor.</div>
+        <div class="row2">
+          <span class="tag">¥10 · TAP</span>
+          <span class="play">PLAY</span>
+        </div>
+      </div>
+    </a>
+
+    <div class="ticket soon">
+      <div class="stub">
+        <div class="no">№ 08</div>
+        <div class="glyph">？</div>
+      </div>
+      <div class="body">
+        <div class="row1">
+          <div class="name-block">
+            <div class="name-jp">近日公開</div>
+            <h3 class="name-en" style="color: var(--faded);">COMING SOON</h3>
+          </div>
+        </div>
+        <div class="desc" style="color: var(--faded-2);">whack-a-mole · 2048 · breakout · or whatever else.</div>
+        <div class="row2">
+          <span class="tag">OUT OF ORDER</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="receipt">
+    <div class="receipt-head">
+      <span>RECEIPT</span>
+      <span class="ja">通算記録</span>
+      <span id="receipt-date">--.--.--</span>
+    </div>
+    <div class="receipt-row">
+      <span class="lbl">Total Runs</span>
+      <span class="leader"></span>
+      <span class="val" id="lt-runs">000</span>
+    </div>
+    <div class="receipt-row">
+      <span class="lbl">Total Taps</span>
+      <span class="leader"></span>
+      <span class="val" id="lt-taps">000</span>
+    </div>
+    <div class="receipt-row">
+      <span class="lbl">★ Achievements</span>
+      <span class="leader"></span>
+      <span class="val" id="lt-ach">00/20</span>
+    </div>
+    <div class="receipt-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--rule);">
+      <span class="lbl" style="font-weight: 700; color: var(--rust);">Subtotal</span>
+      <span class="leader"></span>
+      <span class="val" style="color: var(--rust);">¥<span id="lt-yen">0</span></span>
     </div>
   </div>
 
   <footer>
-    made when bored · <a href="https://github.com/lobolobo12/sportnagoeshard" target="_blank">source</a>
+    <span>MADE WHEN BORED</span>
+    <span class="ja">退屈の友</span>
+    <a href="https://github.com/lobolobo12/sportnagoeshard" target="_blank">SOURCE ↗</a>
   </footer>
+
+  <span class="sticker s1">勝</span>
+  <span class="sticker s2">押</span>
+  <span class="sticker s3">速</span>
 </div>
 
 <script>
@@ -314,45 +844,61 @@
   function lsGetN(k) { return +(localStorage.getItem(k) || 0); }
   function lsGet(k, f) { const v = localStorage.getItem(k); return v === null ? f : v; }
 
-  function setBest(elId, value, suffix='') {
-    const el = document.getElementById(elId);
-    if (!value || value <= 0) {
+  function fmt(n) {
+    if (!n || n <= 0) return '—';
+    return n.toLocaleString('en-US');
+  }
+  function setBest(id, n, suffix='') {
+    const el = document.getElementById(id);
+    if (!n || n <= 0) {
       el.textContent = '—';
       el.classList.add('dash');
     } else {
-      el.textContent = value + suffix;
+      el.textContent = fmt(n) + suffix;
       el.classList.remove('dash');
     }
   }
 
   setBest('best-taphard', lsGetN('taphard_best'));
-  setBest('best-react', lsGetN('react_best'), 'ms');
-  setBest('best-memory', lsGetN('memory_best'));
-  setBest('best-snake', lsGetN('snake_best'));
-  setBest('best-tiles', lsGetN('tiles_best'));
-  setBest('best-stack', lsGetN('stack_best'));
-  setBest('best-flappy', lsGetN('flappy_best'));
+  setBest('best-react',   lsGetN('react_best'),  ' ms');
+  setBest('best-memory',  lsGetN('memory_best'));
+  setBest('best-snake',   lsGetN('snake_best'));
+  setBest('best-tiles',   lsGetN('tiles_best'));
+  setBest('best-stack',   lsGetN('stack_best'));
+  setBest('best-flappy',  lsGetN('flappy_best'));
 
   const totalRuns =
     lsGetN('taphard_runs') + lsGetN('react_runs') + lsGetN('memory_runs') +
     lsGetN('snake_runs') + lsGetN('tiles_runs') + lsGetN('stack_runs') +
     lsGetN('flappy_runs');
-  document.getElementById('lt-runs').textContent = totalRuns;
-  document.getElementById('lt-taps').textContent = lsGetN('taphard_taps');
+  document.getElementById('lt-runs').textContent = String(totalRuns).padStart(3, '0');
+
+  const totalTaps = lsGetN('taphard_taps');
+  document.getElementById('lt-taps').textContent = totalTaps.toLocaleString('en-US');
 
   let achCount = 0;
   try { achCount = JSON.parse(lsGet('taphard_ach', '[]')).length; } catch(e) {}
-  document.getElementById('lt-ach').textContent = achCount;
+  document.getElementById('lt-ach').textContent =
+    String(achCount).padStart(2, '0') + '/20';
 
+  document.getElementById('lt-yen').textContent = (totalRuns * 10).toLocaleString('en-US');
+
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  document.getElementById('receipt-date').textContent = `${yy}.${mm}.${dd}`;
+
+  // streak
   const last = lsGet('taphard_last_day', null);
-  const streakWrap = document.getElementById('streak-wrap');
   if (last) {
     const today = new Date().toDateString();
     const yesterday = new Date(Date.now() - 86400000).toDateString();
     if (last === today || last === yesterday) {
       const streak = lsGetN('taphard_streak');
       if (streak > 0) {
-        streakWrap.innerHTML = `<span class="streak-pill">🔥 ${streak} DAY STREAK</span>`;
+        document.getElementById('streak-num').textContent = streak;
+        document.getElementById('streak-stamp').classList.remove('hidden');
       }
     }
   }
