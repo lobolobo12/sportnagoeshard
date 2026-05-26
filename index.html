@@ -565,10 +565,144 @@
   @media (min-width: 540px) {
     .cabinets { grid-template-columns: 1fr 1fr; }
   }
+
+  /* ── settings ── */
+  .settings-btn {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 8px) + 8px);
+    right: 12px;
+    width: 38px; height: 38px;
+    background: var(--paper);
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    box-shadow: 2px 2px 0 var(--ink);
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 50;
+    transition: transform 0.1s;
+  }
+  .settings-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+  .settings-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(28,26,22,0.6);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .settings-overlay.show { opacity: 1; pointer-events: auto; }
+  .settings-panel {
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    padding: 22px 22px 18px;
+    width: 100%;
+    max-width: 360px;
+    font-family: var(--f-jp);
+  }
+  .settings-panel h2 {
+    font-family: var(--f-display);
+    font-size: 1.6rem;
+    letter-spacing: 0.06em;
+    margin: 0 0 4px;
+    color: var(--ink);
+  }
+  .settings-panel .sub {
+    font-family: var(--f-jp);
+    font-size: 0.75rem;
+    letter-spacing: 0.22em;
+    color: var(--faded);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-top: 1px dashed var(--rule);
+    font-family: var(--f-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+  }
+  .settings-row:first-of-type { border-top: none; }
+  .settings-row label { cursor: pointer; flex: 1; padding-right: 12px; }
+  .settings-row .lbl-jp {
+    display: block;
+    font-family: var(--f-jp);
+    font-size: 10px;
+    color: var(--faded);
+    letter-spacing: 0.16em;
+    margin-bottom: 2px;
+  }
+  .toggle {
+    width: 42px; height: 22px;
+    border: 1.5px solid var(--ink);
+    border-radius: 12px;
+    background: var(--paper-2);
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 1.5px; left: 1.5px;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: var(--ink);
+    transition: transform 0.15s;
+  }
+  .toggle.on { background: var(--rust); }
+  .toggle.on::after { transform: translateX(20px); background: var(--paper); }
+
+  .nick-input {
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px 10px;
+    border: 1.5px solid var(--ink);
+    background: var(--paper-2);
+    font-family: var(--f-mono);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    text-transform: uppercase;
+    outline: none;
+  }
+  .nick-input:focus { background: var(--paper); }
+
+  .settings-close-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 18px;
+    gap: 10px;
+  }
+  .settings-close-btn {
+    background: var(--rust);
+    color: var(--paper);
+    border: none;
+    padding: 8px 22px;
+    font-family: var(--f-display);
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    box-shadow: 2px 2px 0 var(--ink);
+    cursor: pointer;
+  }
+  .settings-close-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
 </style>
 </head>
 <body>
 <div class="wrap">
+
+  <button class="settings-btn" id="settings-btn" aria-label="Settings">⚙</button>
 
   <header class="marquee">
     <span class="kanji-corner tl">遊</span>
@@ -576,7 +710,7 @@
 
     <div class="marquee-top">
       <span><span class="dot"></span>NOW PLAYING</span>
-      <span>NO. 001 / 円 ¥100</span>
+      <span id="player-name-display">NO. 001 / 円 ¥100</span>
     </div>
 
     <h1 class="logotype">
@@ -939,6 +1073,41 @@
   <span class="sticker s3">速</span>
 </div>
 
+<div class="settings-overlay" id="settings-overlay">
+  <div class="settings-panel">
+    <h2>SETTINGS</h2>
+    <div class="sub">設定 · cabinet config</div>
+
+    <div class="settings-row">
+      <label for="set-mute">
+        <span class="lbl-jp">音 · SOUND</span>
+        Mute sound
+      </label>
+      <div class="toggle" id="set-mute" role="switch" tabindex="0"></div>
+    </div>
+
+    <div class="settings-row">
+      <label for="set-haptic">
+        <span class="lbl-jp">振動 · HAPTIC</span>
+        Disable vibration
+      </label>
+      <div class="toggle" id="set-haptic" role="switch" tabindex="0"></div>
+    </div>
+
+    <div class="settings-row" style="flex-direction: column; align-items: stretch;">
+      <label for="set-nick" style="padding-right: 0;">
+        <span class="lbl-jp">名前 · NICKNAME</span>
+        Player name (8 char max)
+      </label>
+      <input class="nick-input" id="set-nick" maxlength="8" placeholder="ANON" />
+    </div>
+
+    <div class="settings-close-row">
+      <button class="settings-close-btn" id="set-close">DONE</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (() => {
   function lsGetN(k) { return +(localStorage.getItem(k) || 0); }
@@ -1007,6 +1176,52 @@
       }
     }
   }
+
+  // ── settings panel ──
+  const settingsOverlay = document.getElementById('settings-overlay');
+  const settingsBtn = document.getElementById('settings-btn');
+  const setMute = document.getElementById('set-mute');
+  const setHaptic = document.getElementById('set-haptic');
+  const setNick = document.getElementById('set-nick');
+  const setClose = document.getElementById('set-close');
+  const playerNameDisplay = document.getElementById('player-name-display');
+
+  function setToggleVisual(el, key) {
+    el.classList.toggle('on', localStorage.getItem(key) === '1');
+  }
+  function bindToggle(el, key) {
+    setToggleVisual(el, key);
+    const handler = () => {
+      const cur = localStorage.getItem(key) === '1';
+      localStorage.setItem(key, cur ? '0' : '1');
+      setToggleVisual(el, key);
+    };
+    el.addEventListener('click', handler);
+    el.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); handler(); }
+    });
+  }
+  bindToggle(setMute, 'settings_mute');
+  bindToggle(setHaptic, 'settings_haptic_off');
+
+  function refreshPlayerNameDisplay() {
+    const name = (lsGet('player_name', '') || '').toUpperCase();
+    playerNameDisplay.textContent = name ? `${name} · 円 ¥100` : 'NO. 001 / 円 ¥100';
+  }
+  setNick.value = (lsGet('player_name', '') || '').toUpperCase();
+  setNick.addEventListener('input', () => {
+    const v = setNick.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 8).toUpperCase();
+    setNick.value = v;
+    localStorage.setItem('player_name', v);
+    refreshPlayerNameDisplay();
+  });
+  refreshPlayerNameDisplay();
+
+  settingsBtn.addEventListener('click', () => settingsOverlay.classList.add('show'));
+  setClose.addEventListener('click', () => settingsOverlay.classList.remove('show'));
+  settingsOverlay.addEventListener('click', (e) => {
+    if (e.target === settingsOverlay) settingsOverlay.classList.remove('show');
+  });
 })();
 </script>
 </body>

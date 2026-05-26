@@ -256,7 +256,7 @@
   const GAME_LENGTH = 60_000;
   const holes = [];
 
-  function audio(freq, duration=0.08, type='sine', vol=0.1) {
+  function audio(freq, duration=0.08, type='sine', vol=0.1) { if(localStorage.getItem("settings_mute")==="1")return;
     try {
       const c = audio.ctx || (audio.ctx = new (window.AudioContext || window.webkitAudioContext)());
       const osc = c.createOscillator(); const gain = c.createGain();
@@ -267,7 +267,7 @@
       osc.start(); osc.stop(c.currentTime + duration);
     } catch(e) {}
   }
-  function vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
+  function vibrate(ms) { if(localStorage.getItem("settings_haptic_off")==="1")return; if (navigator.vibrate) navigator.vibrate(ms); }
 
   let score = 0;
   let alive = false;

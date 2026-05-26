@@ -633,6 +633,7 @@
       <button class="mode-btn active" data-mode="classic">Classic</button>
       <button class="mode-btn" data-mode="hardcore">Hardcore</button>
       <button class="mode-btn" data-mode="zen">Zen</button>
+      <button class="mode-btn" data-mode="endless">Endless</button>
     </div>
     <div class="mode-desc" id="mode-desc">3 lives. standard chaos.</div>
 
@@ -656,8 +657,10 @@
       <div class="row"><span>Score</span><span class="leader"></span><span class="val score" id="final-score">0</span></div>
       <div class="row"><span>Best</span><span class="leader"></span><span class="val" id="best-score">0</span></div>
       <div class="row"><span>Level Reached</span><span class="leader"></span><span class="val" id="final-level">1</span></div>
+      <div class="row hidden" id="challenge-result-row"><span>Challenge</span><span class="leader"></span><span class="val" id="challenge-result">—</span></div>
     </div>
     <button class="btn" id="retry-btn">TRY AGAIN</button>
+    <button class="mode-btn" id="share-btn" style="margin-top:10px; padding: 8px 18px;">📤 CHALLENGE A FRIEND</button>
     <a href="../index.html" class="back-btn">← HUB</a>
   </div>
 
@@ -706,7 +709,8 @@
   const MODE_DESC = {
     classic: '3 lives. standard chaos.',
     hardcore: '1 life. no mercy.',
-    zen: 'no bombs. no death. just vibes.'
+    zen: 'no bombs. no death. just vibes.',
+    endless: '3 lives. no bombs. speed scales steeper. survive.'
   };
 
   const ACHIEVEMENTS = [
@@ -764,10 +768,37 @@
   const MILESTONES = [100, 250, 500, 1000, 2000, 3500, 5000, 7500, 10000];
   const TARGET_SIZE = 64;
 
-  function rand(min, max) { return Math.random() * (max - min) + min; }
+  // ── seeded RNG (for ?seed= challenges) ──
+  function mulberry32(a) {
+    return function() {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function hashSeed(str) {
+    let h = 2166136261 >>> 0;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+  const urlParams = new URLSearchParams(location.search);
+  const seedStr = urlParams.get('seed') || '';
+  const beatScore = +(urlParams.get('beat')) || 0;
+  let seededRand = null;
+  function resetRng() {
+    seededRand = seedStr ? mulberry32(hashSeed(seedStr)) : null;
+  }
+  resetRng();
+  function rng() { return seededRand ? seededRand() : Math.random(); }
+
+  function rand(min, max) { return rng() * (max - min) + min; }
   function now() { return performance.now(); }
 
-  function audio(freq, duration, type='sine', vol=0.1) {
+  function audio(freq, duration, type='sine', vol=0.1) { if(localStorage.getItem("settings_mute")==="1")return;
     try {
       const ctx = audio.ctx || (audio.ctx = new (window.AudioContext || window.webkitAudioContext)());
       const osc = ctx.createOscillator(); const gain = ctx.createGain();
@@ -778,7 +809,7 @@
       osc.start(); osc.stop(ctx.currentTime + duration);
     } catch(e) {}
   }
-  function vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
+  function vibrate(ms) { if(localStorage.getItem("settings_haptic_off")==="1")return; if (navigator.vibrate) navigator.vibrate(ms); }
 
   function lsGet(k, f) { const v = localStorage.getItem(k); return v === null ? f : v; }
   function lsSetN(k, n) { localStorage.setItem(k, String(n)); }
@@ -808,8 +839,8 @@
   }
 
   function spawnTarget() {
-    const roll = Math.random();
-    const noBombs = state.mode === 'zen';
+    const roll = rng();
+    const noBombs = state.mode === 'zen' || state.mode === 'endless';
     let type, points;
     if (!noBombs && roll < 0.10) { type = 'bomb'; points = 0; }
     else if (roll < 0.13) { type = 'slow'; points = 0; }
@@ -891,6 +922,19 @@
   }
 
   function updateChase() {
+    // If a challenge target is set, prioritize that
+    if (beatScore > 0) {
+      const diff = beatScore - state.score;
+      if (diff <= 0) {
+        chaseEl.textContent = `+${state.score - beatScore} OVER FRIEND`;
+        chaseEl.classList.add('show', 'beat');
+      } else {
+        chaseEl.textContent = `${diff} TO BEAT FRIEND`;
+        chaseEl.classList.add('show');
+        chaseEl.classList.remove('beat');
+      }
+      return;
+    }
     const best = lsGetN(bestKey());
     if (best <= 0) { chaseEl.classList.remove('show'); return; }
     const diff = best - state.score;
@@ -904,6 +948,54 @@
     } else {
       chaseEl.classList.remove('show');
     }
+  }
+
+  // ── share / challenge ──
+  function generateSeed() {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    let s = '';
+    for (let i = 0; i < 5; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    return s;
+  }
+  function buildChallengeURL(score) {
+    const seed = seedStr || generateSeed();
+    const url = new URL(location.href.split('?')[0].split('#')[0]);
+    url.searchParams.set('seed', seed);
+    url.searchParams.set('beat', score);
+    return url.href;
+  }
+  function shareChallenge() {
+    const url = buildChallengeURL(state.score);
+    const name = lsGet('player_name', '');
+    const who = name ? name : 'I';
+    const text = `HARD ARCADE · TAP HARD\n${who} scored ${state.score} — beat me?\n${url}`;
+    if (navigator.share) {
+      navigator.share({ text }).catch(() => copyText(text));
+    } else {
+      copyText(text);
+    }
+  }
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        () => flashShareConfirm('LINK COPIED'),
+        () => fallbackCopy(text)
+      );
+    } else fallbackCopy(text);
+  }
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); flashShareConfirm('LINK COPIED'); }
+    catch(_) { prompt('Copy this:', text); }
+    document.body.removeChild(ta);
+  }
+  function flashShareConfirm(msg) {
+    const btn = document.getElementById('share-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ ' + msg;
+    setTimeout(() => { btn.textContent = orig; }, 1800);
   }
 
   function getAchievementState() {
@@ -949,6 +1041,7 @@
   function bestKey() {
     return state.mode === 'hardcore' ? 'taphard_best_hardcore'
       : state.mode === 'zen' ? 'taphard_best_zen'
+      : state.mode === 'endless' ? 'taphard_best_endless'
       : 'taphard_best';
   }
 
@@ -1061,7 +1154,7 @@
   }
 
   function maybeStartWave() {
-    if (state.mode === 'zen') return;
+    if (state.mode === 'zen' || state.mode === 'endless') return;
     if (state.elapsed < state.nextWaveAt) return;
     state.waveUntil = now() + 6000;
     state.nextWaveAt = state.elapsed + 35000;
@@ -1084,8 +1177,9 @@
     state.elapsed += dt;
     const slowFactor = now() < state.slowmoUntil ? 0.35 : 1;
     const inWave = now() < state.waveUntil;
-    state.fallSpeed = 0.12 + (state.elapsed / 1000) * 0.006;
-    let interval = Math.max(280, 900 - state.elapsed * 0.08);
+    const speedMult = state.mode === 'endless' ? 1.7 : 1;
+    state.fallSpeed = 0.12 + (state.elapsed / 1000) * 0.006 * speedMult;
+    let interval = Math.max(state.mode === 'endless' ? 200 : 280, 900 - state.elapsed * 0.08 * speedMult);
     if (inWave) interval *= 0.5;
     state.spawnInterval = interval;
 
@@ -1145,6 +1239,7 @@
 
   function start() {
     markPlayedToday();
+    resetRng();
     state.running = true;
     state.score = 0;
     state.displayScore = 0;
@@ -1195,6 +1290,23 @@
     bestScoreEl.textContent = isNew ? state.score : best;
     finalLevelEl.textContent = state.level;
     newHighEl.classList.toggle('hidden', !isNew);
+
+    // challenge result row
+    const challengeRow = document.getElementById('challenge-result-row');
+    const challengeResultEl = document.getElementById('challenge-result');
+    if (beatScore > 0) {
+      const won = state.score > beatScore;
+      const tied = state.score === beatScore;
+      challengeResultEl.textContent = won
+        ? `+${state.score - beatScore} BEAT IT`
+        : tied
+          ? 'TIED'
+          : `${beatScore - state.score} SHORT`;
+      challengeResultEl.style.color = won ? 'var(--teal)' : tied ? 'var(--mustard)' : 'var(--stamp-red)';
+      challengeRow.classList.remove('hidden');
+    } else {
+      challengeRow.classList.add('hidden');
+    }
 
     const diff = best - state.score;
     if (!isNew && best > 0 && diff > 0 && diff <= Math.max(50, best * 0.1)) {
@@ -1259,6 +1371,7 @@
   retryBtn.addEventListener('click', start);
   achCountEl.addEventListener('click', openAchievements);
   achCloseBtn.addEventListener('click', () => achModal.classList.add('hidden'));
+  document.getElementById('share-btn').addEventListener('click', shareChallenge);
 
   refreshStats();
 })();

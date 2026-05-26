@@ -269,7 +269,7 @@
   ];
   function getRank(ms) { return RANKS.find(r => ms <= r.max); }
 
-  function audio(freq, duration=0.08, type='sine', vol=0.12) {
+  function audio(freq, duration=0.08, type='sine', vol=0.12) { if(localStorage.getItem("settings_mute")==="1")return;
     try {
       const c = audio.ctx || (audio.ctx = new (window.AudioContext || window.webkitAudioContext)());
       const osc = c.createOscillator();
@@ -281,7 +281,7 @@
       osc.start(); osc.stop(c.currentTime + duration);
     } catch(e) {}
   }
-  function vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
+  function vibrate(ms) { if(localStorage.getItem("settings_haptic_off")==="1")return; if (navigator.vibrate) navigator.vibrate(ms); }
 
   function getRecent() { try { return JSON.parse(localStorage.getItem('react_recent') || '[]'); } catch(e) { return []; } }
   function pushRecent(ms) { const r = getRecent(); r.unshift(ms); while (r.length > 5) r.pop(); localStorage.setItem('react_recent', JSON.stringify(r)); }

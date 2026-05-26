@@ -230,8 +230,10 @@
     <div class="go-receipt">
       <div class="row"><span>Reached</span><span class="leader"></span><span class="val" id="go-round">1</span></div>
       <div class="row"><span>Best</span><span class="leader"></span><span class="val" id="go-best" style="color: var(--rust);">0</span></div>
+      <div class="row hidden" id="challenge-result-row"><span>Challenge</span><span class="leader"></span><span class="val" id="challenge-result">—</span></div>
     </div>
     <button class="btn" id="retry-btn">TRY AGAIN</button>
+    <button class="back-btn" id="share-btn" style="background: var(--paper); margin-top: 8px;">📤 CHALLENGE A FRIEND</button>
     <a href="../index.html" class="back-btn">← HUB</a>
   </div>
 </div>
@@ -253,7 +255,19 @@
   const TONES = [261.63, 329.63, 392.00, 523.25];
   let sequence = [], userIdx = 0, playing = false, acceptingInput = false;
 
-  function audio(freq, duration=0.25, vol=0.18) {
+  // ── seeded RNG for ?seed= challenges ──
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  function hashSeed(str){let h=2166136261>>>0;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+  const urlParams = new URLSearchParams(location.search);
+  const seedStr = urlParams.get('seed') || '';
+  const beatScore = +(urlParams.get('beat')) || 0;
+  let seededRand = null;
+  function resetRng(){ seededRand = seedStr ? mulberry32(hashSeed(seedStr)) : null; }
+  resetRng();
+  function rng(){ return seededRand ? seededRand() : Math.random(); }
+  function lsGet(k, f){ const v = localStorage.getItem(k); return v === null ? f : v; }
+
+  function audio(freq, duration=0.25, vol=0.18) { if(localStorage.getItem("settings_mute")==="1")return;
     try {
       const c = audio.ctx || (audio.ctx = new (window.AudioContext || window.webkitAudioContext)());
       const osc = c.createOscillator();
@@ -265,7 +279,7 @@
       osc.start(); osc.stop(c.currentTime + duration);
     } catch(e) {}
   }
-  function vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
+  function vibrate(ms) { if(localStorage.getItem("settings_haptic_off")==="1")return; if (navigator.vibrate) navigator.vibrate(ms); }
 
   function getBest() { return +(localStorage.getItem('memory_best') || 0); }
   function setBest(n) { localStorage.setItem('memory_best', String(n)); }
@@ -307,12 +321,13 @@
   }
 
   function nextRound() {
-    sequence.push(Math.floor(Math.random() * 4));
+    sequence.push(Math.floor(rng() * 4));
     updateRound();
     playSequence();
   }
 
   function start() {
+    resetRng();
     playing = true;
     sequence = []; userIdx = 0;
     bestEl.textContent = getBest();
@@ -344,6 +359,20 @@
     goRoundEl.textContent = reached;
     goBestEl.textContent = isNew ? reached : best;
     newBestEl.classList.toggle('hidden', !isNew);
+
+    const challengeRow = document.getElementById('challenge-result-row');
+    const challengeResultEl = document.getElementById('challenge-result');
+    if (beatScore > 0) {
+      const me = reached - 1; // rounds successfully completed
+      const won = me > beatScore;
+      const tied = me === beatScore;
+      challengeResultEl.textContent = won ? `+${me - beatScore} BEAT IT` : tied ? 'TIED' : `${beatScore - me} SHORT`;
+      challengeResultEl.style.color = won ? 'var(--teal)' : tied ? 'var(--mustard)' : 'var(--stamp-red)';
+      challengeRow.classList.remove('hidden');
+    } else {
+      challengeRow.classList.add('hidden');
+    }
+
     gameoverOverlay.classList.remove('hidden');
   }
 
@@ -363,9 +392,52 @@
   PADS.forEach((pad, idx) => {
     pad.addEventListener('pointerdown', (e) => { e.preventDefault(); onPad(idx); });
   });
+  // ── share / challenge ──
+  function generateSeed(){const c='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++)s+=c[Math.floor(Math.random()*c.length)];return s}
+  function buildChallengeURL(score){
+    const seed = seedStr || generateSeed();
+    const url = new URL(location.href.split('?')[0].split('#')[0]);
+    url.searchParams.set('seed', seed);
+    url.searchParams.set('beat', score);
+    return url.href;
+  }
+  function shareChallenge(){
+    const reached = sequence.length - 1; // rounds completed (the failed attempt doesn't count)
+    const url = buildChallengeURL(reached);
+    const name = lsGet('player_name', '');
+    const who = name || 'I';
+    const text = `HARD ARCADE · MEMORY\n${who} reached round ${reached} — beat me?\n${url}`;
+    if (navigator.share) navigator.share({ text }).catch(() => copyText(text));
+    else copyText(text);
+  }
+  function copyText(text){
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => flashShare('LINK COPIED'), () => fallbackCopy(text));
+    } else fallbackCopy(text);
+  }
+  function fallbackCopy(text){
+    const ta = document.createElement('textarea'); ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); flashShare('LINK COPIED'); } catch(_) { prompt('Copy:', text); }
+    document.body.removeChild(ta);
+  }
+  function flashShare(msg){
+    const btn = document.getElementById('share-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ ' + msg;
+    setTimeout(() => { btn.textContent = orig; }, 1800);
+  }
+
   startBtn.addEventListener('click', start);
   retryBtn.addEventListener('click', start);
+  document.getElementById('share-btn').addEventListener('click', shareChallenge);
   bestEl.textContent = getBest();
+
+  // Show challenge banner at game start if beat param present
+  if (beatScore > 0) {
+    statusEl.textContent = `BEAT FRIEND · ${beatScore} ROUNDS`;
+    statusEl.className = 'status repeat';
+  }
 })();
 </script>
 </body>
