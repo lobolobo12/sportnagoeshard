@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#f4ede0" />
+<title>TILES · 黒</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@400;500;700;800&family=Yuji+Boku&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f4ede0;
+    --paper-2: #ece4d1;
+    --paper-3: #e0d5bb;
+    --ink: #1c1a16;
+    --ink-soft: #3a352d;
+    --faded: #8a7e6a;
+    --rust: #c84a1d;
+    --stamp-red: #b32d23;
+    --rule: rgba(28,26,22,0.18);
+    --f-display: 'RocknRoll One', system-ui, sans-serif;
+    --f-mincho: 'Shippori Mincho', serif;
+    --f-jp: 'Noto Sans JP', system-ui, sans-serif;
+    --f-mono: 'JetBrains Mono', monospace;
+    --f-brush: 'Yuji Boku', serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: var(--paper); color: var(--ink);
+    font-family: var(--f-jp);
+    overscroll-behavior: none;
+  }
+  body { position: fixed; inset: 0; }
+  body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 100; background: repeating-linear-gradient(0deg, rgba(28,26,22,0.04) 0 1px, transparent 1px 3px); mix-blend-mode: multiply; }
+  body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 101; background: radial-gradient(ellipse at center, transparent 55%, rgba(28,26,22,0.18) 100%); }
+
+  #game {
+    position: absolute; inset: 0;
+    background: var(--paper);
+    display: flex; flex-direction: column;
+    align-items: center;
+  }
+  .top {
+    position: absolute;
+    top: env(safe-area-inset-top, 8px);
+    left: 0; right: 0;
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 5;
+  }
+  .stat { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.22em; color: var(--ink-soft); text-transform: uppercase; }
+  .stat.right { text-align: right; }
+  .stat .v { display: block; font-family: var(--f-mono); font-weight: 700; color: var(--ink); font-size: 1.5rem; letter-spacing: 0; line-height: 1; margin-top: 2px; }
+  .stat .v.score { color: var(--rust); }
+
+  #board {
+    position: absolute;
+    top: 70px; bottom: 0; left: 0; right: 0;
+    overflow: hidden;
+    background: var(--paper-2);
+    border-top: 1px solid var(--ink);
+  }
+
+  .row {
+    position: absolute;
+    left: 0; right: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    will-change: transform;
+  }
+  .cell {
+    height: 100%;
+    border-right: 1px solid var(--rule);
+    background: var(--paper-2);
+    position: relative;
+  }
+  .cell:last-child { border-right: none; }
+  .cell.black {
+    background: var(--ink);
+    cursor: pointer;
+  }
+  .cell.black::after {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 1px solid rgba(244,237,224,0.18);
+  }
+  .cell.tapped { background: var(--ink-soft) !important; transition: background 0.15s; }
+  .cell.tapped::before {
+    content: '✓';
+    position: absolute;
+    inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--f-brush);
+    font-size: 2rem;
+    color: var(--rust);
+  }
+  .cell.missed { background: var(--stamp-red) !important; animation: shake 0.3s; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+  }
+
+  .floor-line {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 100px;
+    height: 2px;
+    background: var(--stamp-red);
+    opacity: 0.4;
+    z-index: 2;
+  }
+  .floor-line::before {
+    content: '禁';
+    position: absolute;
+    left: 8px; top: -22px;
+    font-family: var(--f-brush);
+    font-size: 16px;
+    color: var(--stamp-red);
+    opacity: 0.7;
+  }
+
+  .overlay {
+    position: absolute; inset: 0;
+    background: var(--paper);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 20; padding: 24px; text-align: center;
+    transition: opacity 0.25s;
+  }
+  .overlay.hidden { opacity: 0; pointer-events: none; }
+  .title-jp { font-family: var(--f-jp); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.32em; color: var(--faded); margin: 0 0 4px; }
+  .title-en {
+    font-family: var(--f-display);
+    font-size: clamp(2.6rem, 12vw, 4rem);
+    line-height: 0.9; color: var(--ink);
+    margin: 0 0 8px; letter-spacing: -0.01em;
+  }
+  .title-en .kanji { font-family: var(--f-brush); color: var(--ink); font-size: 0.8em; margin-left: 0.15em; }
+  .tag-line { font-family: var(--f-mincho); font-style: italic; color: var(--ink-soft); font-size: 0.95rem; margin: 6px 0 24px; max-width: 280px; }
+  .btn { background: var(--rust); color: var(--paper); border: none; padding: 12px 36px; font-family: var(--f-display); font-size: 1.1rem; letter-spacing: 0.16em; text-transform: uppercase; box-shadow: 3px 3px 0 var(--ink); cursor: pointer; transition: transform 0.1s; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+  .back-btn { background: var(--paper); color: var(--ink-soft); border: 1px solid var(--ink); padding: 5px 12px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; text-decoration: none; margin-top: 14px; display: inline-block; }
+  .go-receipt { border: 1px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); padding: 14px 18px; margin: 16px 0 20px; background: var(--paper); min-width: 240px; }
+  .go-receipt .row { display: flex; align-items: baseline; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-soft); line-height: 2; }
+  .go-receipt .leader { flex: 1; border-bottom: 1px dotted var(--rule); margin: 0 8px; transform: translateY(-3px); }
+  .go-receipt .val { font-weight: 700; color: var(--ink); font-size: 14px; }
+  .new-best { color: var(--stamp-red); font-family: var(--f-display); font-size: 12px; letter-spacing: 0.3em; margin-bottom: 4px; }
+
+  .fail-stamp {
+    position: absolute;
+    top: 32%; left: 50%;
+    transform: translate(-50%, -50%) rotate(-8deg);
+    font-family: var(--f-display);
+    font-size: clamp(3rem, 14vw, 5.5rem);
+    letter-spacing: 0.08em;
+    color: var(--stamp-red);
+    border: 6px double var(--stamp-red);
+    padding: 12px 28px;
+    background: rgba(180,40,30,0.04);
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .fail-stamp.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="game">
+  <div class="top">
+    <div class="stat">
+      <span>SCORE · 黒</span>
+      <span class="v score" id="score">0</span>
+    </div>
+    <div class="stat right">
+      <span>BEST · 記</span>
+      <span class="v" id="best">0</span>
+    </div>
+  </div>
+  <div id="board">
+    <div class="floor-line"></div>
+  </div>
+  <div class="fail-stamp" id="fail-stamp">FAIL</div>
+
+  <div class="overlay" id="start">
+    <div class="title-jp">タイル · NO. 05</div>
+    <h1 class="title-en">TILES<span class="kanji">黒</span></h1>
+    <div class="tag-line">tap only the black ones — never the white. speed increases.</div>
+    <button class="btn" id="start-btn">START</button>
+    <a href="../index.html" class="back-btn">← HUB</a>
+  </div>
+
+  <div class="overlay hidden" id="gameover">
+    <div class="title-jp" style="color: var(--stamp-red);">失 · GAME OVER</div>
+    <h1 class="title-en" style="font-size: clamp(2rem, 9vw, 3rem);">FAILED<span class="kanji" style="color:var(--stamp-red);">失</span></h1>
+    <div class="new-best hidden" id="new-best">★ NEW BEST</div>
+    <div class="go-receipt">
+      <div class="row"><span>Score</span><span class="leader"></span><span class="val" id="go-score">0</span></div>
+      <div class="row"><span>Best</span><span class="leader"></span><span class="val" id="go-best" style="color: var(--rust);">0</span></div>
+      <div class="row hidden" id="challenge-result-row"><span>Challenge</span><span class="leader"></span><span class="val" id="challenge-result">—</span></div>
+    </div>
+    <button class="btn" id="retry-btn">TRY AGAIN</button>
+    <button class="back-btn" id="share-btn" style="background: var(--paper); margin-top: 8px;">📤 CHALLENGE A FRIEND</button>
+    <a href="../index.html" class="back-btn">← HUB</a>
+  </div>
+</div>
+
+<script>
+(() => {
+  const board = document.getElementById('board');
+  const scoreEl = document.getElementById('score');
+  const bestEl = document.getElementById('best');
+  const startOverlay = document.getElementById('start');
+  const gameoverOverlay = document.getElementById('gameover');
+  const startBtn = document.getElementById('start-btn');
+  const retryBtn = document.getElementById('retry-btn');
+  const goScoreEl = document.getElementById('go-score');
+  const goBestEl = document.getElementById('go-best');
+  const newBestEl = document.getElementById('new-best');
+  const failStamp = document.getElementById('fail-stamp');
+
+  let rows = [], score = 0, speed = 0.15, alive = false;
+  let lastFrame = 0, boardH = 0, rowH = 100, nextRowY = 0;
+
+  // ── seeded RNG for ?seed= challenges ──
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  function hashSeed(str){let h=2166136261>>>0;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+  const urlParams = new URLSearchParams(location.search);
+  const seedStr = urlParams.get('seed') || '';
+  const beatScore = +(urlParams.get('beat')) || 0;
+  let seededRand = null;
+  function resetRng(){ seededRand = seedStr ? mulberry32(hashSeed(seedStr)) : null; }
+  resetRng();
+  function rng(){ return seededRand ? seededRand() : Math.random(); }
+  function lsGet(k, f){ const v = localStorage.getItem(k); return v === null ? f : v; }
+
+  function audio(freq, duration=0.08, type='sine', vol=0.1) { if(localStorage.getItem("settings_mute")==="1")return;
+    try {
+      const c = audio.ctx || (audio.ctx = new (window.AudioContext || window.webkitAudioContext)());
+      const osc = c.createOscillator(); const gain = c.createGain();
+      osc.type = type; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, c.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
+      osc.connect(gain); gain.connect(c.destination);
+      osc.start(); osc.stop(c.currentTime + duration);
+    } catch(e) {}
+  }
+  function vibrate(ms) { if(localStorage.getItem("settings_haptic_off")==="1")return; if (navigator.vibrate) navigator.vibrate(ms); }
+
+  function onTapBlack(r) {
+    if (!alive || r.tapped) return;
+    r.tapped = true;
+    r.cells[r.blackCol].classList.add('tapped');
+    score++;
+    scoreEl.textContent = score;
+    audio(400 + (score % 12) * 50, 0.07, 'sine', 0.1);
+    vibrate(10);
+    speed = Math.min(0.6, 0.15 + score * 0.004);
+  }
+
+  function spawnRowAt(y) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.style.height = rowH + 'px';
+    const blackCol = Math.floor(rng() * 4);
+    const cells = [];
+    for (let i = 0; i < 4; i++) {
+      const c = document.createElement('div');
+      c.className = 'cell' + (i === blackCol ? ' black' : '');
+      cells.push(c); row.appendChild(c);
+    }
+    row.style.transform = `translateY(${y}px)`;
+    board.appendChild(row);
+    const r = { el: row, y, blackCol, tapped: false, missed: false, cells };
+    cells[blackCol].addEventListener('pointerdown', (e) => { e.preventDefault(); onTapBlack(r); });
+    cells.forEach((c, i) => {
+      if (i === blackCol) return;
+      c.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        if (!alive) return;
+        c.classList.add('missed');
+        fail('TAPPED WHITE');
+      });
+    });
+    rows.push(r);
+    return r;
+  }
+
+  function loop(t) {
+    if (!alive) return;
+    const dt = Math.min(50, t - lastFrame);
+    lastFrame = t;
+    for (const r of rows) {
+      r.y += speed * dt;
+      r.el.style.transform = `translateY(${r.y}px)`;
+    }
+    const failLine = boardH - 100;
+    for (const r of rows) {
+      if (!r.tapped && !r.missed && r.y >= failLine) {
+        r.missed = true;
+        r.cells[r.blackCol].classList.add('missed');
+        return fail('MISSED');
+      }
+    }
+    rows = rows.filter(r => { if (r.y > boardH) { r.el.remove(); return false; } return true; });
+    // continuously spawn from top
+    if (rows.length > 0) {
+      const topY = Math.min(...rows.map(r => r.y));
+      if (topY > -rowH) spawnRowAt(topY - rowH);
+    } else {
+      spawnRowAt(-rowH);
+    }
+    requestAnimationFrame(loop);
+  }
+
+  function fail(reason) {
+    if (!alive) return;
+    alive = false;
+    failStamp.classList.add('show');
+    audio(150, 0.4, 'sawtooth', 0.18);
+    setTimeout(() => audio(80, 0.4, 'sawtooth', 0.15), 150);
+    vibrate([80, 60, 120]);
+    const best = +(localStorage.getItem('tiles_best') || 0);
+    const isNew = score > best;
+    if (isNew) localStorage.setItem('tiles_best', score);
+    goScoreEl.textContent = score;
+    goBestEl.textContent = isNew ? score : best;
+    newBestEl.classList.toggle('hidden', !isNew);
+
+    const challengeRow = document.getElementById('challenge-result-row');
+    const challengeResultEl = document.getElementById('challenge-result');
+    if (beatScore > 0) {
+      const won = score > beatScore, tied = score === beatScore;
+      challengeResultEl.textContent = won ? `+${score - beatScore} BEAT IT` : tied ? 'TIED' : `${beatScore - score} SHORT`;
+      challengeResultEl.style.color = won ? 'var(--teal)' : tied ? 'var(--mustard)' : 'var(--stamp-red)';
+      challengeRow.classList.remove('hidden');
+    } else {
+      challengeRow.classList.add('hidden');
+    }
+
+    setTimeout(() => {
+      failStamp.classList.remove('show');
+      gameoverOverlay.classList.remove('hidden');
+    }, 900);
+    const runs = +(localStorage.getItem('tiles_runs') || 0) + 1;
+    localStorage.setItem('tiles_runs', runs);
+  }
+
+  function start() {
+    resetRng();
+    boardH = board.clientHeight;
+    rowH = Math.min(140, Math.max(85, Math.floor(boardH / 5)));
+    rows.forEach(r => r.el.remove());
+    rows = [];
+    score = 0; speed = 0.15;
+    scoreEl.textContent = 0;
+    bestEl.textContent = +(localStorage.getItem('tiles_best') || 0);
+    for (let i = 0; i < 5; i++) {
+      spawnRowAt(boardH - 100 - rowH - (i * rowH));
+    }
+    alive = true;
+    lastFrame = performance.now();
+    failStamp.classList.remove('show');
+    startOverlay.classList.add('hidden');
+    gameoverOverlay.classList.add('hidden');
+    requestAnimationFrame(loop);
+  }
+
+  // ── share / challenge ──
+  function generateSeed(){const c='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++)s+=c[Math.floor(Math.random()*c.length)];return s}
+  function buildChallengeURL(s){
+    const seed = seedStr || generateSeed();
+    const url = new URL(location.href.split('?')[0].split('#')[0]);
+    url.searchParams.set('seed', seed); url.searchParams.set('beat', s);
+    return url.href;
+  }
+  function shareChallenge(){
+    const url = buildChallengeURL(score);
+    const name = lsGet('player_name', '');
+    const who = name || 'I';
+    const text = `HARD ARCADE · TILES\n${who} scored ${score} — beat me?\n${url}`;
+    if (navigator.share) navigator.share({ text }).catch(() => copyText(text));
+    else copyText(text);
+  }
+  function copyText(text){
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => flashShare('LINK COPIED'), () => fallbackCopy(text));
+    } else fallbackCopy(text);
+  }
+  function fallbackCopy(text){
+    const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); flashShare('LINK COPIED'); } catch(_) { prompt('Copy:', text); }
+    document.body.removeChild(ta);
+  }
+  function flashShare(msg){
+    const btn = document.getElementById('share-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ ' + msg;
+    setTimeout(() => { btn.textContent = orig; }, 1800);
+  }
+
+  startBtn.addEventListener('click', start);
+  retryBtn.addEventListener('click', start);
+  document.getElementById('share-btn').addEventListener('click', shareChallenge);
+  bestEl.textContent = +(localStorage.getItem('tiles_best') || 0);
+})();
+</script>
+</body>
+</html>

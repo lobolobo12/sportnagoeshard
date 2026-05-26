@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#f4ede0" />
+<title>TAP HARD · 強打</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@400;500;700;800&family=Yuji+Boku&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f4ede0;
+    --paper-2: #ece4d1;
+    --paper-3: #e0d5bb;
+    --ink: #1c1a16;
+    --ink-soft: #3a352d;
+    --faded: #8a7e6a;
+    --rust: #c84a1d;
+    --rust-dark: #9a3514;
+    --stamp-red: #b32d23;
+    --mustard: #c69a2a;
+    --olive: #6b6a3a;
+    --teal: #2f6a6a;
+    --good: #6b6a3a;   /* olive */
+    --rare: #c69a2a;   /* mustard */
+    --epic: #2f6a6a;   /* teal */
+    --bomb: #b32d23;   /* stamp red */
+    --slow: #5a4a8a;   /* muted purple */
+    --mult: #c84a1d;   /* rust */
+    --life: #9a3514;   /* dark rust */
+    --rule: rgba(28,26,22,0.18);
+    --f-display: 'RocknRoll One', system-ui, sans-serif;
+    --f-mincho: 'Shippori Mincho', serif;
+    --f-jp: 'Noto Sans JP', system-ui, sans-serif;
+    --f-mono: 'JetBrains Mono', monospace;
+    --f-brush: 'Yuji Boku', serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: var(--paper); color: var(--ink);
+    font-family: var(--f-jp);
+    overscroll-behavior: none;
+  }
+  body { position: fixed; inset: 0; }
+  body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 100; background: repeating-linear-gradient(0deg, rgba(28,26,22,0.04) 0 1px, transparent 1px 3px); mix-blend-mode: multiply; }
+  body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 101; background: radial-gradient(ellipse at center, transparent 55%, rgba(28,26,22,0.18) 100%); }
+
+  #game {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at top, var(--paper) 0%, var(--paper-2) 100%);
+    overflow: hidden;
+  }
+
+  /* ── HUD ── */
+  .hud {
+    position: absolute;
+    top: env(safe-area-inset-top, 12px);
+    left: 0; right: 0;
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .hud-side { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.22em; color: var(--ink-soft); text-transform: uppercase; }
+  .hud-side.right { text-align: right; }
+  .hud-side .v { display: block; font-family: var(--f-mono); font-weight: 700; color: var(--ink); font-size: 1.5rem; letter-spacing: 0; line-height: 1; margin-top: 2px; }
+  .hud-side .v.score { color: var(--rust); }
+  .level-tag {
+    display: inline-block;
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    color: var(--paper);
+    background: var(--ink);
+    padding: 2px 6px;
+    margin-top: 4px;
+  }
+  .lives { letter-spacing: 0.1em; color: var(--stamp-red); }
+  .lives.infinite { color: var(--teal); }
+
+  .chase {
+    position: absolute;
+    top: env(safe-area-inset-top, 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 6px;
+    background: var(--paper);
+    border: 1px solid var(--rust);
+    color: var(--rust);
+    padding: 3px 12px;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .chase.show { opacity: 1; }
+  .chase.beat { border-color: var(--teal); color: var(--teal); }
+
+  .combo {
+    position: absolute;
+    top: 95px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--f-display);
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    color: var(--mustard);
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .combo.show { opacity: 1; }
+
+  .buffs {
+    position: absolute;
+    top: 95px;
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .buff {
+    background: var(--paper);
+    border: 1px solid currentColor;
+    padding: 2px 8px;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    font-weight: 700;
+  }
+  .buff.slow { color: var(--slow); }
+  .buff.mult { color: var(--mult); }
+
+  .banner {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.6);
+    font-family: var(--f-display);
+    font-size: 1.8rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--rust);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 15;
+    transition: transform 0.3s, opacity 0.3s;
+    white-space: nowrap;
+    background: var(--paper);
+    border: 2.5px solid currentColor;
+    padding: 10px 24px;
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+  .banner.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .banner .kanji { font-family: var(--f-brush); font-size: 1.3em; margin-right: 8px; vertical-align: -2px; }
+
+  /* ── achievement stack ── */
+  .achievement-stack {
+    position: absolute;
+    top: 75px;
+    left: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 16;
+    pointer-events: none;
+  }
+  .achievement {
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    color: var(--ink);
+    padding: 6px 12px;
+    box-shadow: 3px 3px 0 var(--ink);
+    transform: translateX(-130%);
+    animation: ach-slide 3.5s forwards;
+    max-width: 240px;
+    position: relative;
+  }
+  .achievement::before {
+    content: '★';
+    position: absolute;
+    top: -8px; right: -8px;
+    background: var(--stamp-red);
+    color: var(--paper);
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    border: 1.5px solid var(--ink);
+  }
+  .achievement .ach-title {
+    display: block;
+    font-family: var(--f-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--stamp-red);
+    margin-bottom: 2px;
+  }
+  .achievement .ach-name {
+    display: block;
+    font-family: var(--f-display);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+  }
+  @keyframes ach-slide {
+    0% { transform: translateX(-130%); }
+    8% { transform: translateX(0); }
+    85% { transform: translateX(0); opacity: 1; }
+    100% { transform: translateX(-130%); opacity: 0; }
+  }
+
+  /* ── targets (orbs) ── */
+  .target {
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--f-display);
+    font-size: 0.95rem;
+    letter-spacing: -0.02em;
+    cursor: pointer;
+    will-change: transform;
+    box-shadow: 2px 2px 0 var(--ink);
+    color: var(--paper);
+  }
+  .target.epic { font-size: 0.78rem; }
+  .target.slow { font-size: 0.75rem; }
+  .target.good { background: var(--good); }
+  .target.rare { background: var(--rare); color: var(--ink); }
+  .target.epic { background: var(--epic); animation: epic-pulse 0.6s infinite alternate; }
+  @keyframes epic-pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.08); }
+  }
+  .target.bomb {
+    background: var(--paper);
+    color: var(--bomb);
+    border: 2.5px double var(--bomb);
+    box-shadow: 2px 2px 0 var(--bomb);
+  }
+  .target.slow {
+    background: var(--slow);
+    animation: slow-spin 2s linear infinite;
+  }
+  @keyframes slow-spin { to { transform: rotate(360deg); } }
+  .target.mult {
+    background: var(--mult);
+    animation: mult-pulse 0.5s infinite alternate;
+  }
+  @keyframes mult-pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+  }
+  .target.life {
+    background: var(--paper);
+    color: var(--life);
+    border: 2.5px solid var(--life);
+    box-shadow: 2px 2px 0 var(--life);
+    animation: life-beat 0.7s infinite;
+  }
+  @keyframes life-beat {
+    0%,100% { transform: scale(1); }
+    20% { transform: scale(1.15); }
+    40% { transform: scale(1); }
+    60% { transform: scale(1.08); }
+  }
+  .target.popped {
+    pointer-events: none;
+    animation: pop 0.3s ease-out forwards;
+  }
+  @keyframes pop {
+    from { transform: scale(1); opacity: 1; }
+    to { transform: scale(1.8); opacity: 0; }
+  }
+  .target.near-miss-flash {
+    animation: nm-flash 0.4s;
+  }
+  @keyframes nm-flash {
+    0%,100% { box-shadow: 2px 2px 0 var(--bomb); }
+    50% { box-shadow: 0 0 0 4px var(--paper), 0 0 0 6px var(--bomb); }
+  }
+
+  .popup {
+    position: absolute;
+    font-family: var(--f-mono);
+    font-size: 1rem;
+    font-weight: 700;
+    pointer-events: none;
+    animation: float-up 0.7s ease-out forwards;
+    z-index: 5;
+    letter-spacing: 0.05em;
+  }
+  .popup.big {
+    font-family: var(--f-display);
+    font-size: 1.5rem;
+    animation: float-up-big 1s ease-out forwards;
+  }
+  @keyframes float-up {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(-50px); opacity: 0; }
+  }
+  @keyframes float-up-big {
+    0% { transform: translateY(0) scale(0.5); opacity: 0; }
+    20% { transform: translateY(-10px) scale(1.2); opacity: 1; }
+    100% { transform: translateY(-70px) scale(1); opacity: 0; }
+  }
+
+  .wave-vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 7;
+    opacity: 0;
+    box-shadow: inset 0 0 80px 20px var(--bomb);
+    transition: opacity 0.3s;
+  }
+  .wave-vignette.active {
+    opacity: 1;
+    animation: wave-throb 0.8s infinite alternate;
+  }
+  @keyframes wave-throb {
+    from { box-shadow: inset 0 0 60px 10px var(--bomb); }
+    to { box-shadow: inset 0 0 120px 30px var(--bomb); }
+  }
+
+  /* ── overlays ── */
+  .screen {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: var(--paper);
+    z-index: 20; padding: 24px; text-align: center;
+    transition: opacity 0.3s;
+    overflow-y: auto;
+  }
+  .screen.hidden { opacity: 0; pointer-events: none; }
+  .title-jp {
+    font-family: var(--f-jp); font-weight: 700;
+    font-size: 0.85rem; letter-spacing: 0.32em;
+    color: var(--faded); margin: 0 0 4px;
+  }
+  .title-en {
+    font-family: var(--f-display);
+    font-size: clamp(2.6rem, 12vw, 4.2rem);
+    line-height: 0.9;
+    color: var(--ink);
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .title-en .kanji {
+    font-family: var(--f-brush);
+    color: var(--stamp-red);
+    font-size: 0.8em;
+    margin-left: 0.15em;
+  }
+  .tagline {
+    font-family: var(--f-mincho);
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    margin: 4px 0 16px;
+  }
+
+  .streak-badge {
+    margin: 0 0 16px;
+    transform: rotate(-3deg);
+    border: 2px solid var(--stamp-red);
+    color: var(--stamp-red);
+    padding: 4px 12px 3px;
+    font-family: var(--f-display);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    background: rgba(180,40,30,0.04);
+  }
+  .streak-badge .num { font-family: var(--f-mono); font-size: 13px; margin: 0 4px; }
+  .streak-badge.hidden { display: none; }
+
+  .legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 18px;
+    margin: 0 0 16px;
+    font-family: var(--f-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+    max-width: 320px;
+    text-transform: uppercase;
+  }
+  .legend .row { display: flex; align-items: center; gap: 8px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; border: 1px solid var(--ink); }
+  .dot.good { background: var(--good); }
+  .dot.rare { background: var(--rare); }
+  .dot.epic { background: var(--epic); }
+  .dot.bomb { background: var(--paper); border: 1.5px solid var(--bomb); }
+  .dot.slow { background: var(--slow); }
+  .dot.mult { background: var(--mult); }
+  .dot.life { background: var(--paper); border: 1.5px solid var(--life); }
+
+  .modes {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .mode-btn {
+    background: var(--paper);
+    color: var(--ink-soft);
+    border: 1px solid var(--ink);
+    padding: 6px 14px;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    transition: all 0.1s;
+  }
+  .mode-btn.active {
+    color: var(--paper);
+    background: var(--ink);
+  }
+  .mode-desc {
+    color: var(--ink-soft);
+    font-family: var(--f-mincho);
+    font-style: italic;
+    font-size: 0.85rem;
+    margin-bottom: 18px;
+    min-height: 1.2em;
+  }
+
+  .btn {
+    background: var(--rust); color: var(--paper); border: none;
+    padding: 12px 36px; font-family: var(--f-display);
+    font-size: 1.1rem; letter-spacing: 0.16em; text-transform: uppercase;
+    box-shadow: 3px 3px 0 var(--ink); cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+
+  .back-btn {
+    background: var(--paper); color: var(--ink-soft);
+    border: 1px solid var(--ink); padding: 5px 12px;
+    font-family: var(--f-mono); font-size: 10px;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    text-decoration: none; margin-top: 12px;
+    display: inline-block;
+  }
+
+  .stats-bar {
+    display: flex;
+    gap: 14px;
+    margin-top: 16px;
+    color: var(--ink-soft);
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .stats-bar span { color: var(--ink); font-weight: 700; }
+
+  .ach-count {
+    margin-top: 10px;
+    color: var(--stamp-red);
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    pointer-events: auto;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 1px;
+  }
+
+  .gameover-stats {
+    margin: 12px 0 18px;
+    border: 1px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    background: var(--paper);
+    padding: 14px 18px;
+    min-width: 260px;
+  }
+  .gameover-stats .row {
+    display: flex; align-items: baseline;
+    font-family: var(--f-mono); font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-soft); line-height: 2;
+  }
+  .gameover-stats .leader { flex: 1; border-bottom: 1px dotted var(--rule); margin: 0 8px; transform: translateY(-3px); }
+  .gameover-stats .val { font-weight: 700; color: var(--ink); font-size: 14px; }
+  .gameover-stats .val.score { color: var(--rust); }
+  .new-high {
+    color: var(--stamp-red);
+    font-family: var(--f-display);
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+  .so-close {
+    color: var(--stamp-red);
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  .hidden { display: none !important; }
+
+  .shake { animation: shake 0.2s; }
+  @keyframes shake {
+    0%,100% { transform: translate(0,0); }
+    25% { transform: translate(-3px,1px); }
+    50% { transform: translate(3px,-1px); }
+    75% { transform: translate(-1px,3px); }
+  }
+
+  .slowmo-overlay {
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at center, transparent 40%, rgba(90,74,138,0.18) 100%);
+    pointer-events: none;
+    z-index: 8;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .slowmo-overlay.active { opacity: 1; }
+
+  /* ── achievements modal ── */
+  .ach-list-modal {
+    position: absolute; inset: 0;
+    background: var(--paper);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 20px;
+    overflow-y: auto;
+  }
+  .ach-list-modal.hidden { display: none; }
+  .ach-list-modal h2 {
+    font-family: var(--f-display);
+    font-size: 1.6rem;
+    letter-spacing: 0.12em;
+    margin: 0 0 16px;
+    color: var(--ink);
+  }
+  .ach-list-modal h2 .kanji { font-family: var(--f-brush); color: var(--stamp-red); margin-right: 8px; }
+  .ach-list-item {
+    width: 100%;
+    max-width: 380px;
+    padding: 10px 14px;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .ach-list-item.done { border-color: var(--stamp-red); box-shadow: 2px 2px 0 var(--stamp-red); }
+  .ach-list-item .name { font-family: var(--f-display); font-size: 12px; letter-spacing: 0.06em; }
+  .ach-list-item .desc { font-family: var(--f-mincho); font-style: italic; font-size: 11px; color: var(--ink-soft); margin-top: 1px; }
+  .ach-list-item .mark { font-family: var(--f-brush); font-size: 1.2rem; color: var(--rule); }
+  .ach-list-item.done .mark { color: var(--stamp-red); }
+  .ach-list-item:not(.done) { opacity: 0.5; }
+  .ach-close { margin-top: 16px; }
+</style>
+</head>
+<body>
+<div id="game">
+  <div class="slowmo-overlay" id="slowmo-overlay"></div>
+  <div class="wave-vignette" id="wave-vignette"></div>
+
+  <div class="hud">
+    <div class="hud-side">
+      <span>SCORE · 点</span>
+      <span class="v score" id="score">0</span>
+      <span class="level-tag" id="level-tag">Lv 1</span>
+    </div>
+    <div class="hud-side right">
+      <span>LIVES · 命</span>
+      <span class="v lives" id="lives">♥♥♥</span>
+    </div>
+  </div>
+  <div class="chase" id="chase">— TO BEAT BEST</div>
+  <div class="combo" id="combo">x2 COMBO</div>
+  <div class="buffs" id="buffs"></div>
+  <div class="banner" id="banner"></div>
+  <div class="achievement-stack" id="ach-stack"></div>
+
+  <div class="screen" id="start-screen">
+    <div class="title-jp">タップ・ハード · NO. 01</div>
+    <h1 class="title-en">TAP HARD<span class="kanji">強</span></h1>
+    <div class="tagline">tap the orbs, dodge the bombs, chase the combo</div>
+
+    <div class="streak-badge hidden" id="streak-badge">連続 · <span class="num" id="streak-num">0</span> DAY STREAK</div>
+
+    <div class="legend">
+      <div class="row"><span class="dot good"></span> +10 PTS</div>
+      <div class="row"><span class="dot rare"></span> +25 PTS</div>
+      <div class="row"><span class="dot epic"></span> +100 PTS</div>
+      <div class="row"><span class="dot bomb"></span> BOMB · AVOID</div>
+      <div class="row"><span class="dot slow"></span> SLOW-MO</div>
+      <div class="row"><span class="dot mult"></span> 2X SCORE</div>
+      <div class="row"><span class="dot life"></span> +1 LIFE</div>
+    </div>
+
+    <div class="modes" id="modes">
+      <button class="mode-btn active" data-mode="classic">Classic</button>
+      <button class="mode-btn" data-mode="hardcore">Hardcore</button>
+      <button class="mode-btn" data-mode="zen">Zen</button>
+      <button class="mode-btn" data-mode="endless">Endless</button>
+    </div>
+    <div class="mode-desc" id="mode-desc">3 lives. standard chaos.</div>
+
+    <button class="btn" id="start-btn">START</button>
+    <a href="../index.html" class="back-btn">← HUB</a>
+
+    <div class="stats-bar">
+      <div>BEST <span id="stat-best">0</span></div>
+      <div>TAPS <span id="stat-taps">0</span></div>
+      <div>RUNS <span id="stat-runs">0</span></div>
+    </div>
+    <div class="ach-count" id="ach-count">★ 0 / 0 ACHIEVEMENTS</div>
+  </div>
+
+  <div class="screen hidden" id="gameover-screen">
+    <div class="title-jp" style="color: var(--stamp-red);">終 · GAME OVER</div>
+    <h1 class="title-en" style="font-size: clamp(2rem, 9vw, 3rem);">FINISHED<span class="kanji" style="color: var(--stamp-red);">終</span></h1>
+    <div class="new-high hidden" id="new-high">★ NEW HIGH SCORE</div>
+    <div class="so-close hidden" id="so-close">SO CLOSE · <span id="so-close-diff"></span> AWAY</div>
+    <div class="gameover-stats">
+      <div class="row"><span>Score</span><span class="leader"></span><span class="val score" id="final-score">0</span></div>
+      <div class="row"><span>Best</span><span class="leader"></span><span class="val" id="best-score">0</span></div>
+      <div class="row"><span>Level Reached</span><span class="leader"></span><span class="val" id="final-level">1</span></div>
+      <div class="row hidden" id="challenge-result-row"><span>Challenge</span><span class="leader"></span><span class="val" id="challenge-result">—</span></div>
+    </div>
+    <button class="btn" id="retry-btn">TRY AGAIN</button>
+    <button class="mode-btn" id="share-btn" style="margin-top:10px; padding: 8px 18px;">📤 CHALLENGE A FRIEND</button>
+    <a href="../index.html" class="back-btn">← HUB</a>
+  </div>
+
+  <div class="ach-list-modal hidden" id="ach-modal">
+    <h2><span class="kanji">星</span>ACHIEVEMENTS</h2>
+    <div id="ach-list" style="width: 100%; display: flex; flex-direction: column; align-items: center;"></div>
+    <button class="btn ach-close" id="ach-close">CLOSE</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const game = document.getElementById('game');
+  const scoreEl = document.getElementById('score');
+  const livesEl = document.getElementById('lives');
+  const levelTagEl = document.getElementById('level-tag');
+  const comboEl = document.getElementById('combo');
+  const buffsEl = document.getElementById('buffs');
+  const bannerEl = document.getElementById('banner');
+  const chaseEl = document.getElementById('chase');
+  const achStackEl = document.getElementById('ach-stack');
+  const slowmoOverlay = document.getElementById('slowmo-overlay');
+  const waveVignette = document.getElementById('wave-vignette');
+  const startScreen = document.getElementById('start-screen');
+  const gameoverScreen = document.getElementById('gameover-screen');
+  const finalScoreEl = document.getElementById('final-score');
+  const bestScoreEl = document.getElementById('best-score');
+  const finalLevelEl = document.getElementById('final-level');
+  const newHighEl = document.getElementById('new-high');
+  const soCloseEl = document.getElementById('so-close');
+  const soCloseDiffEl = document.getElementById('so-close-diff');
+  const startBtn = document.getElementById('start-btn');
+  const retryBtn = document.getElementById('retry-btn');
+  const statTapsEl = document.getElementById('stat-taps');
+  const statRunsEl = document.getElementById('stat-runs');
+  const statBestEl = document.getElementById('stat-best');
+  const streakBadge = document.getElementById('streak-badge');
+  const streakNumEl = document.getElementById('streak-num');
+  const achCountEl = document.getElementById('ach-count');
+  const achModal = document.getElementById('ach-modal');
+  const achListEl = document.getElementById('ach-list');
+  const achCloseBtn = document.getElementById('ach-close');
+  const modesEl = document.getElementById('modes');
+  const modeDescEl = document.getElementById('mode-desc');
+
+  const MODE_DESC = {
+    classic: '3 lives. standard chaos.',
+    hardcore: '1 life. no mercy.',
+    zen: 'no bombs. no death. just vibes.',
+    endless: '3 lives. no bombs. speed scales steeper. survive.'
+  };
+
+  const ACHIEVEMENTS = [
+    { id: 'first_tap',    name: 'First Blood',           desc: 'tap your first orb',           check: s => s.totalTaps >= 1 },
+    { id: 'tap_100',      name: 'Century',               desc: 'tap 100 orbs lifetime',        check: s => s.totalTaps >= 100 },
+    { id: 'tap_500',      name: 'Tap Goblin',            desc: 'tap 500 orbs lifetime',        check: s => s.totalTaps >= 500 },
+    { id: 'tap_2000',     name: 'Tap Demon',             desc: 'tap 2,000 orbs lifetime',      check: s => s.totalTaps >= 2000 },
+    { id: 'combo_x3',     name: 'Combo Starter',         desc: 'hit a x3 combo',               check: s => s.maxComboMult >= 3 },
+    { id: 'combo_x5',     name: 'Combo King',            desc: 'hit a x5 combo',               check: s => s.maxComboMult >= 5 },
+    { id: 'lvl_3',        name: 'Warmed Up',             desc: 'reach level 3',                check: s => s.maxLevel >= 3 },
+    { id: 'lvl_5',        name: 'In The Zone',           desc: 'reach level 5',                check: s => s.maxLevel >= 5 },
+    { id: 'lvl_8',        name: 'Locked In',             desc: 'reach level 8',                check: s => s.maxLevel >= 8 },
+    { id: 'score_500',    name: '500 Club',              desc: 'score 500 in one run',         check: s => s.best >= 500 },
+    { id: 'score_2000',   name: 'Cracked',               desc: 'score 2,000 in one run',       check: s => s.best >= 2000 },
+    { id: 'score_5000',   name: 'Unhinged',              desc: 'score 5,000 in one run',       check: s => s.best >= 5000 },
+    { id: 'near_miss_5',  name: 'Living Dangerously',    desc: 'survive 5 near-misses',        check: s => s.runNearMisses >= 5 },
+    { id: 'no_bombs',     name: 'Pacifist',              desc: 'finish without touching a bomb', check: s => s.runCompletedNoBombs === true },
+    { id: 'epic_3',       name: 'Star Collector',        desc: 'tap 3 epic orbs in one run',   check: s => s.runEpicTaps >= 3 },
+    { id: 'streak_3',     name: 'On A Roll',             desc: '3-day play streak',            check: s => s.dailyStreak >= 3 },
+    { id: 'streak_7',     name: 'Hooked',                desc: '7-day play streak',            check: s => s.dailyStreak >= 7 },
+    { id: 'hardcore_win', name: 'Hardcore Hero',         desc: 'score 250+ in hardcore',       check: s => s.bestHardcore >= 250 },
+    { id: 'zen_10k',      name: 'Inner Peace',           desc: 'score 10,000 in zen',          check: s => s.bestZen >= 10000 },
+    { id: 'wave_survive', name: 'Wave Rider',            desc: 'survive 3 waves in one run',   check: s => s.runWavesSurvived >= 3 },
+  ];
+
+  const state = {
+    running: false,
+    mode: 'classic',
+    score: 0,
+    displayScore: 0,
+    lives: 3,
+    level: 1,
+    combo: 0,
+    targets: [],
+    spawnTimer: 0,
+    spawnInterval: 900,
+    elapsed: 0,
+    lastFrame: 0,
+    fallSpeed: 0.12,
+    slowmoUntil: 0,
+    multUntil: 0,
+    waveUntil: 0,
+    nextWaveAt: 35000,
+    lastTapX: -999,
+    lastTapY: -999,
+    lastTapTime: 0,
+    runNearMisses: 0,
+    runEpicTaps: 0,
+    runBombsTouched: 0,
+    runWavesSurvived: 0,
+    maxComboMultThisRun: 1,
+    milestonesShown: new Set(),
+  };
+
+  const MILESTONES = [100, 250, 500, 1000, 2000, 3500, 5000, 7500, 10000];
+  const TARGET_SIZE = 64;
+
+  // ── seeded RNG (for ?seed= challenges) ──
+  function mulberry32(a) {
+    return function() {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function hashSeed(str) {
+    let h = 2166136261 >>> 0;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+  const urlParams = new URLSearchParams(location.search);
+  const seedStr = urlParams.get('seed') || '';
+  const beatScore = +(urlParams.get('beat')) || 0;
+  let seededRand = null;
+  function resetRng() {
+    seededRand = seedStr ? mulberry32(hashSeed(seedStr)) : null;
+  }
+  resetRng();
+  function rng() { return seededRand ? seededRand() : Math.random(); }
+
+  function rand(min, max) { return rng() * (max - min) + min; }
+  function now() { return performance.now(); }
+
+  function audio(freq, duration, type='sine', vol=0.1) { if(localStorage.getItem("settings_mute")==="1")return;
+    try {
+      const ctx = audio.ctx || (audio.ctx = new (window.AudioContext || window.webkitAudioContext)());
+      const osc = ctx.createOscillator(); const gain = ctx.createGain();
+      osc.type = type; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(); osc.stop(ctx.currentTime + duration);
+    } catch(e) {}
+  }
+  function vibrate(ms) { if(localStorage.getItem("settings_haptic_off")==="1")return; if (navigator.vibrate) navigator.vibrate(ms); }
+
+  function lsGet(k, f) { const v = localStorage.getItem(k); return v === null ? f : v; }
+  function lsSetN(k, n) { localStorage.setItem(k, String(n)); }
+  function lsGetN(k) { return +(lsGet(k, 0)); }
+  function getUnlockedSet() { try { return new Set(JSON.parse(lsGet('taphard_ach', '[]'))); } catch(e) { return new Set(); } }
+  function saveUnlockedSet(s) { localStorage.setItem('taphard_ach', JSON.stringify([...s])); }
+
+  function getDailyStreak() {
+    const last = lsGet('taphard_last_day', null);
+    const streak = lsGetN('taphard_streak');
+    if (!last) return 0;
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    if (last === today || last === yesterday) return streak;
+    return 0;
+  }
+  function markPlayedToday() {
+    const today = new Date().toDateString();
+    const last = lsGet('taphard_last_day', null);
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    if (last === today) return;
+    let streak = lsGetN('taphard_streak');
+    if (last === yesterday) streak += 1;
+    else streak = 1;
+    localStorage.setItem('taphard_last_day', today);
+    lsSetN('taphard_streak', streak);
+  }
+
+  function spawnTarget() {
+    const roll = rng();
+    const noBombs = state.mode === 'zen' || state.mode === 'endless';
+    let type, points;
+    if (!noBombs && roll < 0.10) { type = 'bomb'; points = 0; }
+    else if (roll < 0.13) { type = 'slow'; points = 0; }
+    else if (roll < 0.16) { type = 'mult'; points = 0; }
+    else if (roll < 0.175 && state.mode !== 'zen') { type = 'life'; points = 0; }
+    else if (roll < 0.22) { type = 'epic'; points = 100; }
+    else if (roll < 0.50) { type = 'rare'; points = 25; }
+    else { type = 'good'; points = 10; }
+
+    const size = type === 'epic' ? TARGET_SIZE - 8 : TARGET_SIZE;
+    const x = rand(8, window.innerWidth - size - 8);
+    const el = document.createElement('div');
+    el.className = 'target ' + type;
+    el.style.width = size + 'px';
+    el.style.height = size + 'px';
+    el.style.left = x + 'px';
+    el.style.top = -size + 'px';
+    if (type === 'bomb') el.textContent = 'X';
+    else if (type === 'epic') el.textContent = '+100';
+    else if (type === 'slow') el.textContent = 'SLOW';
+    else if (type === 'mult') el.textContent = 'x2';
+    else if (type === 'life') el.textContent = '+1';
+    else if (type === 'rare') el.textContent = '+25';
+    else if (type === 'good') el.textContent = '+10';
+
+    let baseSpeed = state.fallSpeed;
+    if (type === 'epic') baseSpeed *= 1.6;
+    else if (type === 'rare') baseSpeed *= 1.25;
+    else if (type === 'life' || type === 'mult' || type === 'slow') baseSpeed *= 1.1;
+
+    const target = { el, type, points, x, y: -size, size, speed: baseSpeed, alive: true, checkedNearMiss: false };
+    el.addEventListener('pointerdown', (e) => { e.preventDefault(); onTap(target); });
+    game.appendChild(el);
+    state.targets.push(target);
+  }
+
+  function popup(text, x, y, color, big=false) {
+    const el = document.createElement('div');
+    el.className = 'popup' + (big ? ' big' : '');
+    el.textContent = text;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.style.color = color;
+    game.appendChild(el);
+    setTimeout(() => el.remove(), big ? 1000 : 700);
+  }
+
+  function showCombo() {
+    if (state.combo >= 3) {
+      comboEl.textContent = `x${comboMult()} COMBO`;
+      comboEl.classList.add('show');
+      clearTimeout(showCombo.t);
+      showCombo.t = setTimeout(() => comboEl.classList.remove('show'), 800);
+    }
+  }
+  function comboMult() {
+    if (state.combo < 3) return 1;
+    return Math.min(5, Math.floor(state.combo / 3) + 1);
+  }
+
+  function showBanner(text, color, kanji='', dur=1100) {
+    bannerEl.innerHTML = kanji ? `<span class="kanji">${kanji}</span>${text}` : text;
+    bannerEl.style.color = color || 'var(--rust)';
+    bannerEl.style.borderColor = color || 'var(--rust)';
+    bannerEl.classList.add('show');
+    clearTimeout(showBanner.t);
+    showBanner.t = setTimeout(() => bannerEl.classList.remove('show'), dur);
+  }
+
+  function updateBuffs() {
+    const t = now();
+    const slowLeft = Math.max(0, state.slowmoUntil - t);
+    const multLeft = Math.max(0, state.multUntil - t);
+    let html = '';
+    if (slowLeft > 0) html += `<div class="buff slow">SLOW ${(slowLeft/1000).toFixed(1)}s</div>`;
+    if (multLeft > 0) html += `<div class="buff mult">x2 ${(multLeft/1000).toFixed(1)}s</div>`;
+    buffsEl.innerHTML = html;
+    slowmoOverlay.classList.toggle('active', slowLeft > 0);
+  }
+
+  function updateChase() {
+    // If a challenge target is set, prioritize that
+    if (beatScore > 0) {
+      const diff = beatScore - state.score;
+      if (diff <= 0) {
+        chaseEl.textContent = `+${state.score - beatScore} OVER FRIEND`;
+        chaseEl.classList.add('show', 'beat');
+      } else {
+        chaseEl.textContent = `${diff} TO BEAT FRIEND`;
+        chaseEl.classList.add('show');
+        chaseEl.classList.remove('beat');
+      }
+      return;
+    }
+    const best = lsGetN(bestKey());
+    if (best <= 0) { chaseEl.classList.remove('show'); return; }
+    const diff = best - state.score;
+    if (diff <= 0) {
+      chaseEl.textContent = `+${state.score - best} OVER BEST`;
+      chaseEl.classList.add('show', 'beat');
+    } else if (diff <= 500) {
+      chaseEl.textContent = `${diff} TO BEAT BEST`;
+      chaseEl.classList.add('show');
+      chaseEl.classList.remove('beat');
+    } else {
+      chaseEl.classList.remove('show');
+    }
+  }
+
+  // ── share / challenge ──
+  function generateSeed() {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    let s = '';
+    for (let i = 0; i < 5; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    return s;
+  }
+  function buildChallengeURL(score) {
+    const seed = seedStr || generateSeed();
+    const url = new URL(location.href.split('?')[0].split('#')[0]);
+    url.searchParams.set('seed', seed);
+    url.searchParams.set('beat', score);
+    return url.href;
+  }
+  function shareChallenge() {
+    const url = buildChallengeURL(state.score);
+    const name = lsGet('player_name', '');
+    const who = name ? name : 'I';
+    const text = `HARD ARCADE · TAP HARD\n${who} scored ${state.score} — beat me?\n${url}`;
+    if (navigator.share) {
+      navigator.share({ text }).catch(() => copyText(text));
+    } else {
+      copyText(text);
+    }
+  }
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        () => flashShareConfirm('LINK COPIED'),
+        () => fallbackCopy(text)
+      );
+    } else fallbackCopy(text);
+  }
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); flashShareConfirm('LINK COPIED'); }
+    catch(_) { prompt('Copy this:', text); }
+    document.body.removeChild(ta);
+  }
+  function flashShareConfirm(msg) {
+    const btn = document.getElementById('share-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ ' + msg;
+    setTimeout(() => { btn.textContent = orig; }, 1800);
+  }
+
+  function getAchievementState() {
+    return {
+      totalTaps: lsGetN('taphard_taps'),
+      maxComboMult: lsGetN('taphard_max_combo_mult'),
+      maxLevel: lsGetN('taphard_max_level'),
+      best: lsGetN('taphard_best'),
+      bestHardcore: lsGetN('taphard_best_hardcore'),
+      bestZen: lsGetN('taphard_best_zen'),
+      dailyStreak: getDailyStreak(),
+      runNearMisses: state.runNearMisses,
+      runEpicTaps: state.runEpicTaps,
+      runWavesSurvived: state.runWavesSurvived,
+      runCompletedNoBombs: state.runBombsTouched === 0 && !state.running && state.score > 100,
+    };
+  }
+  function checkAchievements() {
+    const unlocked = getUnlockedSet();
+    const s = getAchievementState();
+    for (const a of ACHIEVEMENTS) {
+      if (unlocked.has(a.id)) continue;
+      try {
+        if (a.check(s)) {
+          unlocked.add(a.id);
+          showAchievement(a);
+        }
+      } catch(e) {}
+    }
+    saveUnlockedSet(unlocked);
+  }
+  function showAchievement(a) {
+    const el = document.createElement('div');
+    el.className = 'achievement';
+    el.innerHTML = `<span class="ach-title">★ UNLOCKED</span><span class="ach-name">${a.name}</span>`;
+    achStackEl.appendChild(el);
+    audio(1000, 0.1, 'square', 0.1);
+    audio(1400, 0.15, 'square', 0.1);
+    vibrate([30, 40, 30]);
+    setTimeout(() => el.remove(), 3500);
+  }
+
+  function bestKey() {
+    return state.mode === 'hardcore' ? 'taphard_best_hardcore'
+      : state.mode === 'zen' ? 'taphard_best_zen'
+      : state.mode === 'endless' ? 'taphard_best_endless'
+      : 'taphard_best';
+  }
+
+  function onTap(target) {
+    if (!target.alive || !state.running) return;
+    target.alive = false;
+    target.el.classList.add('popped');
+    setTimeout(() => target.el.remove(), 300);
+
+    incTaps();
+    state.lastTapX = target.x + target.size / 2;
+    state.lastTapY = target.y + target.size / 2;
+    state.lastTapTime = now();
+
+    if (target.type === 'bomb') {
+      state.runBombsTouched++;
+      loseLife();
+      state.combo = 0;
+      audio(120, 0.3, 'sawtooth', 0.2);
+      vibrate([60, 40, 60]);
+      popup('BOOM', target.x, target.y, 'var(--bomb)');
+      game.classList.add('shake');
+      setTimeout(() => game.classList.remove('shake'), 200);
+    } else if (target.type === 'slow') {
+      state.slowmoUntil = now() + 5000;
+      audio(900, 0.3, 'sine', 0.12);
+      audio(600, 0.4, 'sine', 0.1);
+      vibrate(30);
+      popup('SLOW-MO', target.x, target.y, 'var(--slow)');
+      showBanner('SLOW-MO', 'var(--slow)');
+    } else if (target.type === 'mult') {
+      state.multUntil = now() + 10000;
+      audio(700, 0.15, 'square', 0.12);
+      audio(1000, 0.15, 'square', 0.12);
+      vibrate(30);
+      popup('x2 SCORE', target.x, target.y, 'var(--mult)');
+      showBanner('x2 SCORE', 'var(--mult)');
+    } else if (target.type === 'life') {
+      if (state.mode !== 'zen') {
+        state.lives = Math.min(5, state.lives + 1);
+        updateLives();
+      }
+      audio(800, 0.2, 'triangle', 0.12);
+      audio(1200, 0.3, 'triangle', 0.12);
+      vibrate([20, 30, 20]);
+      popup('+1 LIFE', target.x, target.y, 'var(--life)');
+      showBanner('+1 LIFE', 'var(--life)');
+    } else {
+      state.combo++;
+      const baseMult = comboMult();
+      const scoreMult = now() < state.multUntil ? 2 : 1;
+      const totalMult = baseMult * scoreMult;
+      const gained = target.points * totalMult;
+      state.score += gained;
+      state.maxComboMultThisRun = Math.max(state.maxComboMultThisRun, baseMult);
+      if (target.type === 'epic') state.runEpicTaps++;
+      lsSetN('taphard_max_combo_mult', Math.max(lsGetN('taphard_max_combo_mult'), baseMult));
+      const freq = target.type === 'epic' ? 1200 : target.type === 'rare' ? 800 : 600;
+      audio(freq, 0.1, 'sine', 0.08);
+      vibrate(15);
+      const col = target.type === 'epic' ? 'var(--epic)' : target.type === 'rare' ? 'var(--rare)' : 'var(--good)';
+      popup(`+${gained}`, target.x, target.y, col);
+      showCombo();
+      checkLevelUp();
+      checkMilestones();
+      checkAchievements();
+    }
+  }
+
+  function checkLevelUp() {
+    const newLevel = Math.floor(state.score / 750) + 1;
+    if (newLevel > state.level) {
+      state.level = newLevel;
+      levelTagEl.textContent = `Lv ${state.level}`;
+      showBanner(`LEVEL ${state.level}`, 'var(--mustard)');
+      audio(600, 0.15, 'square', 0.1);
+      audio(900, 0.2, 'square', 0.1);
+      vibrate([20, 30, 20, 30, 60]);
+      lsSetN('taphard_max_level', Math.max(lsGetN('taphard_max_level'), state.level));
+    }
+  }
+
+  function checkMilestones() {
+    for (const m of MILESTONES) {
+      if (state.score >= m && !state.milestonesShown.has(m)) {
+        state.milestonesShown.add(m);
+        popup(`${m}!`, window.innerWidth / 2 - 30, window.innerHeight / 2, 'var(--rust)', true);
+        audio(1200, 0.15, 'square', 0.12);
+        vibrate(50);
+      }
+    }
+  }
+
+  function updateLives() {
+    if (state.mode === 'zen') {
+      livesEl.className = 'v lives infinite';
+      livesEl.textContent = '∞';
+    } else {
+      const max = state.mode === 'hardcore' ? 1 : 3;
+      livesEl.className = 'v lives';
+      livesEl.textContent = '♥'.repeat(Math.max(0, state.lives)) + '·'.repeat(Math.max(0, max - state.lives));
+    }
+  }
+
+  function loseLife() {
+    if (state.mode === 'zen') return;
+    state.lives--;
+    updateLives();
+    if (state.lives <= 0) gameOver();
+  }
+
+  function maybeStartWave() {
+    if (state.mode === 'zen' || state.mode === 'endless') return;
+    if (state.elapsed < state.nextWaveAt) return;
+    state.waveUntil = now() + 6000;
+    state.nextWaveAt = state.elapsed + 35000;
+    showBanner('WAVE INCOMING', 'var(--bomb)', '', 1000);
+    waveVignette.classList.add('active');
+    audio(200, 0.5, 'sawtooth', 0.15);
+    setTimeout(() => audio(400, 0.4, 'sawtooth', 0.12), 200);
+    vibrate([80, 60, 80, 60, 120]);
+    setTimeout(() => {
+      waveVignette.classList.remove('active');
+      state.runWavesSurvived++;
+      checkAchievements();
+    }, 6000);
+  }
+
+  function loop(t) {
+    if (!state.running) return;
+    const dt = Math.min(50, t - state.lastFrame);
+    state.lastFrame = t;
+    state.elapsed += dt;
+    const slowFactor = now() < state.slowmoUntil ? 0.35 : 1;
+    const inWave = now() < state.waveUntil;
+    const speedMult = state.mode === 'endless' ? 1.7 : 1;
+    state.fallSpeed = 0.12 + (state.elapsed / 1000) * 0.006 * speedMult;
+    let interval = Math.max(state.mode === 'endless' ? 200 : 280, 900 - state.elapsed * 0.08 * speedMult);
+    if (inWave) interval *= 0.5;
+    state.spawnInterval = interval;
+
+    state.spawnTimer += dt * slowFactor;
+    if (state.spawnTimer >= state.spawnInterval) {
+      state.spawnTimer = 0;
+      spawnTarget();
+    }
+    maybeStartWave();
+
+    const h = window.innerHeight;
+    for (const tgt of state.targets) {
+      if (!tgt.alive) continue;
+      tgt.y += tgt.speed * dt * slowFactor;
+      tgt.el.style.top = tgt.y + 'px';
+      if (tgt.type === 'bomb' && !tgt.checkedNearMiss) {
+        const cx = tgt.x + tgt.size / 2;
+        const cy = tgt.y + tgt.size / 2;
+        const tapAge = now() - state.lastTapTime;
+        const dx = cx - state.lastTapX;
+        const dy = cy - state.lastTapY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (tapAge < 400 && dist < 90) {
+          tgt.checkedNearMiss = true;
+          tgt.el.classList.add('near-miss-flash');
+          state.runNearMisses++;
+          popup('CLOSE!', tgt.x, tgt.y, 'var(--ink)');
+          audio(1500, 0.05, 'square', 0.06);
+          vibrate(10);
+          checkAchievements();
+        }
+      }
+      if (tgt.y > h) {
+        tgt.alive = false;
+        tgt.el.remove();
+        if (tgt.type === 'good' || tgt.type === 'rare' || tgt.type === 'epic') {
+          loseLife();
+          state.combo = 0;
+          audio(200, 0.15, 'triangle', 0.1);
+          vibrate(40);
+        }
+      }
+    }
+    state.targets = state.targets.filter(t => t.alive);
+
+    if (state.displayScore !== state.score) {
+      const diff = state.score - state.displayScore;
+      const step = Math.max(1, Math.ceil(diff / 6));
+      state.displayScore = Math.min(state.score, state.displayScore + step);
+      scoreEl.textContent = state.displayScore;
+    }
+
+    updateBuffs();
+    updateChase();
+    requestAnimationFrame(loop);
+  }
+
+  function start() {
+    markPlayedToday();
+    resetRng();
+    state.running = true;
+    state.score = 0;
+    state.displayScore = 0;
+    state.lives = state.mode === 'hardcore' ? 1 : 3;
+    state.level = 1;
+    state.combo = 0;
+    state.targets.forEach(t => t.el.remove());
+    state.targets = [];
+    state.spawnTimer = 0;
+    state.spawnInterval = 900;
+    state.elapsed = 0;
+    state.fallSpeed = 0.12;
+    state.slowmoUntil = 0;
+    state.multUntil = 0;
+    state.waveUntil = 0;
+    state.nextWaveAt = 35000;
+    state.runNearMisses = 0;
+    state.runEpicTaps = 0;
+    state.runBombsTouched = 0;
+    state.runWavesSurvived = 0;
+    state.maxComboMultThisRun = 1;
+    state.milestonesShown = new Set();
+    state.lastFrame = performance.now();
+    scoreEl.textContent = '0';
+    levelTagEl.textContent = 'Lv 1';
+    updateLives();
+    buffsEl.innerHTML = '';
+    chaseEl.classList.remove('show', 'beat');
+    incRuns();
+    checkAchievements();
+    startScreen.classList.add('hidden');
+    gameoverScreen.classList.add('hidden');
+    requestAnimationFrame(loop);
+  }
+
+  function gameOver() {
+    state.running = false;
+    state.targets.forEach(t => t.el.remove());
+    state.targets = [];
+    waveVignette.classList.remove('active');
+
+    const key = bestKey();
+    const best = lsGetN(key);
+    const isNew = state.score > best;
+    if (isNew) lsSetN(key, state.score);
+
+    finalScoreEl.textContent = state.score;
+    bestScoreEl.textContent = isNew ? state.score : best;
+    finalLevelEl.textContent = state.level;
+    newHighEl.classList.toggle('hidden', !isNew);
+
+    // challenge result row
+    const challengeRow = document.getElementById('challenge-result-row');
+    const challengeResultEl = document.getElementById('challenge-result');
+    if (beatScore > 0) {
+      const won = state.score > beatScore;
+      const tied = state.score === beatScore;
+      challengeResultEl.textContent = won
+        ? `+${state.score - beatScore} BEAT IT`
+        : tied
+          ? 'TIED'
+          : `${beatScore - state.score} SHORT`;
+      challengeResultEl.style.color = won ? 'var(--teal)' : tied ? 'var(--mustard)' : 'var(--stamp-red)';
+      challengeRow.classList.remove('hidden');
+    } else {
+      challengeRow.classList.add('hidden');
+    }
+
+    const diff = best - state.score;
+    if (!isNew && best > 0 && diff > 0 && diff <= Math.max(50, best * 0.1)) {
+      soCloseDiffEl.textContent = diff;
+      soCloseEl.classList.remove('hidden');
+    } else {
+      soCloseEl.classList.add('hidden');
+    }
+
+    gameoverScreen.classList.remove('hidden');
+    audio(300, 0.2, 'sawtooth', 0.15);
+    setTimeout(() => audio(150, 0.4, 'sawtooth', 0.15), 150);
+    vibrate([100, 50, 100, 50, 200]);
+
+    checkAchievements();
+    refreshStats();
+  }
+
+  function incTaps() {
+    const n = lsGetN('taphard_taps') + 1;
+    lsSetN('taphard_taps', n);
+  }
+  function incRuns() {
+    const n = lsGetN('taphard_runs') + 1;
+    lsSetN('taphard_runs', n);
+  }
+  function refreshStats() {
+    statBestEl.textContent = lsGetN('taphard_best');
+    statTapsEl.textContent = lsGetN('taphard_taps');
+    statRunsEl.textContent = lsGetN('taphard_runs');
+    const streak = getDailyStreak();
+    if (streak > 0) {
+      streakBadge.classList.remove('hidden');
+      streakNumEl.textContent = streak;
+    } else streakBadge.classList.add('hidden');
+    const unlocked = getUnlockedSet();
+    achCountEl.textContent = `★ ${unlocked.size} / ${ACHIEVEMENTS.length} ACHIEVEMENTS`;
+  }
+
+  function openAchievements() {
+    const unlocked = getUnlockedSet();
+    achListEl.innerHTML = ACHIEVEMENTS.map(a => `
+      <div class="ach-list-item ${unlocked.has(a.id) ? 'done' : ''}">
+        <div style="flex:1;">
+          <div class="name">${a.name}</div>
+          <div class="desc">${a.desc}</div>
+        </div>
+        <div class="mark">${unlocked.has(a.id) ? '★' : '○'}</div>
+      </div>
+    `).join('');
+    achModal.classList.remove('hidden');
+  }
+
+  modesEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.mode-btn');
+    if (!btn) return;
+    state.mode = btn.dataset.mode;
+    modesEl.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b === btn));
+    modeDescEl.textContent = MODE_DESC[state.mode];
+  });
+  startBtn.addEventListener('click', start);
+  retryBtn.addEventListener('click', start);
+  achCountEl.addEventListener('click', openAchievements);
+  achCloseBtn.addEventListener('click', () => achModal.classList.add('hidden'));
+  document.getElementById('share-btn').addEventListener('click', shareChallenge);
+
+  refreshStats();
+})();
+</script>
+</body>
+</html>

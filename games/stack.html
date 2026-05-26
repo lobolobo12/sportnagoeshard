@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#f4ede0" />
+<title>STACK · 積</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@400;500;700;800&family=Yuji+Boku&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f4ede0;
+    --paper-2: #ece4d1;
+    --paper-3: #e0d5bb;
+    --ink: #1c1a16;
+    --ink-soft: #3a352d;
+    --faded: #8a7e6a;
+    --rust: #c84a1d;
+    --stamp-red: #b32d23;
+    --mustard: #c69a2a;
+    --olive: #6b6a3a;
+    --teal: #2f6a6a;
+    --rule: rgba(28,26,22,0.18);
+    --f-display: 'RocknRoll One', system-ui, sans-serif;
+    --f-mincho: 'Shippori Mincho', serif;
+    --f-jp: 'Noto Sans JP', system-ui, sans-serif;
+    --f-mono: 'JetBrains Mono', monospace;
+    --f-brush: 'Yuji Boku', serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: var(--paper); color: var(--ink);
+    font-family: var(--f-jp);
+    overscroll-behavior: none;
+  }
+  body { position: fixed; inset: 0; }
+  body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 100; background: repeating-linear-gradient(0deg, rgba(28,26,22,0.04) 0 1px, transparent 1px 3px); mix-blend-mode: multiply; }
+  body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 101; background: radial-gradient(ellipse at center, transparent 55%, rgba(28,26,22,0.18) 100%); }
+
+  #game {
+    position: absolute; inset: 0;
+    background: var(--paper);
+    cursor: pointer;
+  }
+  canvas {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%; display: block;
+  }
+  .top {
+    position: absolute;
+    top: env(safe-area-inset-top, 14px);
+    left: 0; right: 0;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 5;
+    pointer-events: none;
+  }
+  .stat { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.22em; color: var(--ink-soft); text-transform: uppercase; }
+  .stat.right { text-align: right; }
+  .stat .v { display: block; font-family: var(--f-mono); font-weight: 700; color: var(--ink); font-size: 1.6rem; letter-spacing: 0; line-height: 1; margin-top: 2px; }
+  .stat .v.score { color: var(--rust); }
+
+  .perfect-stamp {
+    position: absolute;
+    top: 36%; left: 50%;
+    transform: translate(-50%, -50%) rotate(-6deg) scale(0.5);
+    font-family: var(--f-display);
+    font-size: clamp(2.4rem, 10vw, 4rem);
+    letter-spacing: 0.08em;
+    color: var(--rust);
+    border: 5px double var(--rust);
+    padding: 8px 22px;
+    background: rgba(200,74,29,0.06);
+    z-index: 5;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .perfect-stamp.show { opacity: 1; transform: translate(-50%, -50%) rotate(-6deg) scale(1); }
+
+  .hint {
+    position: absolute;
+    bottom: 70px; left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--f-mono);
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    pointer-events: none;
+    animation: hint-pulse 1.2s infinite alternate;
+  }
+  .hint .kanji { font-family: var(--f-brush); font-size: 14px; margin: 0 6px; color: var(--rust); }
+  @keyframes hint-pulse { from { opacity: 0.4; } to { opacity: 1; } }
+
+  .overlay {
+    position: absolute; inset: 0;
+    background: var(--paper);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 20; padding: 24px; text-align: center;
+    transition: opacity 0.25s;
+  }
+  .overlay.hidden { opacity: 0; pointer-events: none; }
+  .title-jp { font-family: var(--f-jp); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.32em; color: var(--faded); margin: 0 0 4px; }
+  .title-en {
+    font-family: var(--f-display);
+    font-size: clamp(2.6rem, 12vw, 4rem);
+    line-height: 0.9; color: var(--ink);
+    margin: 0 0 8px; letter-spacing: -0.01em;
+  }
+  .title-en .kanji { font-family: var(--f-brush); color: var(--stamp-red); font-size: 0.8em; margin-left: 0.15em; }
+  .tag-line { font-family: var(--f-mincho); font-style: italic; color: var(--ink-soft); font-size: 0.95rem; margin: 6px 0 24px; max-width: 280px; }
+  .btn { background: var(--rust); color: var(--paper); border: none; padding: 12px 36px; font-family: var(--f-display); font-size: 1.1rem; letter-spacing: 0.16em; text-transform: uppercase; box-shadow: 3px 3px 0 var(--ink); cursor: pointer; transition: transform 0.1s; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+  .back-btn { background: var(--paper); color: var(--ink-soft); border: 1px solid var(--ink); padding: 5px 12px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; text-decoration: none; margin-top: 14px; display: inline-block; }
+  .go-receipt { border: 1px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); padding: 14px 18px; margin: 16px 0 20px; background: var(--paper); min-width: 240px; }
+  .go-receipt .row { display: flex; align-items: baseline; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-soft); line-height: 2; }
+  .go-receipt .leader { flex: 1; border-bottom: 1px dotted var(--rule); margin: 0 8px; transform: translateY(-3px); }
+  .go-receipt .val { font-weight: 700; color: var(--ink); font-size: 14px; }
+  .new-best { color: var(--stamp-red); font-family: var(--f-display); font-size: 12px; letter-spacing: 0.3em; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div id="game">
+  <canvas id="cv"></canvas>
+  <div class="top">
+    <div class="stat">
+      <span>HEIGHT · 高</span>
+      <span class="v score" id="score">0</span>
+    </div>
+    <div class="stat right">
+      <span>BEST · 積</span>
+      <span class="v" id="best">0</span>
+    </div>
+  </div>
+  <div class="perfect-stamp" id="perfect">PERFECT</div>
+  <div class="hint" id="hint"><span class="kanji">押</span>TAP TO DROP</div>
+
+  <div class="overlay" id="start">
+    <div class="title-jp">スタック · NO. 06</div>
+    <h1 class="title-en">STACK<span class="kanji">積</span></h1>
+    <div class="tag-line">tap to drop. stay aligned. reach the sky.</div>
+    <button class="btn" id="start-btn">START</button>
+    <a href="../index.html" class="back-btn">← HUB</a>
+  </div>
+
+  <div class="overlay hidden" id="gameover">
+    <div class="title-jp" style="color: var(--stamp-red);">崩 · COLLAPSED</div>
+    <h1 class="title-en" style="font-size: clamp(2rem, 9vw, 3rem);">DOWN<span class="kanji" style="color:var(--stamp-red);">崩</span></h1>
+    <div class="new-best hidden" id="new-best">★ NEW BEST</div>
+    <div class="go-receipt">
+      <div class="row"><span>Height</span><span class="leader"></span><span class="val" id="go-score">0</span></div>
+      <div class="row"><span>Best</span><span class="leader"></span><span class="val" id="go-best" style="color: var(--rust);">0</span></div>
+    </div>
+    <button class="btn" id="retry-btn">TRY AGAIN</button>
+    <a href="../index.html" class="back-btn">← HUB</a>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('cv');
+  const ctx = canvas.getContext('2d');
+  const gameEl = document.getElementById('game');
+  const scoreEl = document.getElementById('score');
+  const bestEl = document.getElementById('best');
+  const startOverlay = document.getElementById('start');
+  const gameoverOverlay = document.getElementById('gameover');
+  const startBtn = document.getElementById('start-btn');
+  const retryBtn = document.getElementById('retry-btn');
+  const goScoreEl = document.getElementById('go-score');
+  const goBestEl = document.getElementById('go-best');
+  const newBestEl = document.getElementById('new-best');
+  const perfectStamp = document.getElementById('perfect');
+  const hintEl = document.getElementById('hint');
+
+  let W, H, blockH = 36;
+  let stack, current, alive = false, score = 0;
+  let cameraY = 0, targetCameraY = 0, lastFrame = 0;
+  let falling = [];
+
+  const PALETTE = ['#c84a1d', '#c69a2a', '#6b6a3a', '#2f6a6a', '#9a3514', '#b32d23'];
+
+  function fit() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function audio(freq, duration=0.1, type='sine', vol=0.1) { if(localStorage.getItem("settings_mute")==="1")return;
+    try {
+      const c = audio.ctx || (audio.ctx = new (window.AudioContext || window.webkitAudioContext)());
+      const osc = c.createOscillator(); const gain = c.createGain();
+      osc.type = type; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, c.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
+      osc.connect(gain); gain.connect(c.destination);
+      osc.start(); osc.stop(c.currentTime + duration);
+    } catch(e) {}
+  }
+  function vibrate(ms) { if(localStorage.getItem("settings_haptic_off")==="1")return; if (navigator.vibrate) navigator.vibrate(ms); }
+
+  function colorForHeight(h) { return PALETTE[h % PALETTE.length]; }
+
+  function newCurrent() {
+    const last = stack[stack.length - 1];
+    const fromLeft = Math.random() < 0.5;
+    current = {
+      x: fromLeft ? -last.w : W,
+      w: last.w,
+      color: colorForHeight(stack.length),
+      dir: fromLeft ? 1 : -1,
+      speed: Math.min(0.6, 0.25 + stack.length * 0.012),
+    };
+  }
+
+  function drop() {
+    if (!alive) return;
+    const last = stack[stack.length - 1];
+    const overlapLeft = Math.max(current.x, last.x);
+    const overlapRight = Math.min(current.x + current.w, last.x + last.w);
+    const overlap = overlapRight - overlapLeft;
+
+    if (overlap <= 0) {
+      falling.push({...current, vy: 0});
+      return gameOver();
+    }
+    const isPerfect = Math.abs(current.x - last.x) < 4;
+
+    if (isPerfect) {
+      current.x = last.x;
+      current.w = Math.min(last.w + 4, W * 0.85);
+      perfectStamp.classList.add('show');
+      audio(1200, 0.12, 'square', 0.12);
+      audio(1600, 0.1, 'square', 0.1);
+      vibrate([20, 30, 20]);
+      setTimeout(() => perfectStamp.classList.remove('show'), 450);
+    } else {
+      const cutLeft = overlapLeft - current.x;
+      const cutRight = (current.x + current.w) - overlapRight;
+      if (cutLeft > 0) falling.push({ x: current.x, y: yForLevel(stack.length), w: cutLeft, color: current.color, vy: 0, vx: -0.15 });
+      if (cutRight > 0) falling.push({ x: overlapRight, y: yForLevel(stack.length), w: cutRight, color: current.color, vy: 0, vx: 0.15 });
+      current.x = overlapLeft;
+      current.w = overlap;
+      audio(500, 0.08, 'square', 0.1);
+      vibrate(15);
+    }
+
+    stack.push({ x: current.x, w: current.w, color: current.color });
+    score++;
+    scoreEl.textContent = score;
+    if (current.w < 8) return gameOver();
+    targetCameraY = Math.max(0, (stack.length - 6) * blockH);
+    newCurrent();
+    if (hintEl.style.opacity !== '0') hintEl.style.opacity = '0';
+  }
+
+  function yForLevel(level) { return H - 80 - level * blockH; }
+
+  function loop(t) {
+    const dt = Math.min(50, t - lastFrame);
+    lastFrame = t;
+    if (alive && current) {
+      current.x += current.speed * current.dir * dt;
+      if (current.x + current.w > W && current.dir > 0) current.dir = -1;
+      if (current.x < 0 && current.dir < 0) current.dir = 1;
+    }
+    cameraY += (targetCameraY - cameraY) * 0.08;
+    for (const f of falling) {
+      f.vy += 0.001 * dt;
+      f.y += f.vy * dt;
+      if (f.vx) f.x += f.vx * dt;
+    }
+    falling = falling.filter(f => f.y < H + 200);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function draw() {
+    // paper background gradient
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, '#ece4d1');
+    grad.addColorStop(1, '#f4ede0');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // stack with ink outline
+    for (let i = 0; i < stack.length; i++) {
+      const b = stack[i];
+      const y = yForLevel(i) + cameraY;
+      if (y > H + 40 || y < -40) continue;
+      ctx.fillStyle = b.color;
+      ctx.fillRect(b.x, y, b.w, blockH - 2);
+      ctx.strokeStyle = '#1c1a16';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(b.x + 0.75, y + 0.75, b.w - 1.5, blockH - 3.5);
+      // tiny mono number on each block
+      if (b.w > 40) {
+        ctx.fillStyle = 'rgba(244,237,224,0.85)';
+        ctx.font = '700 9px JetBrains Mono, monospace';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(i).padStart(2,'0'), b.x + 6, y + (blockH - 2) / 2);
+      }
+    }
+
+    // current
+    if (current && alive) {
+      const y = yForLevel(stack.length) + cameraY;
+      ctx.fillStyle = current.color;
+      ctx.fillRect(current.x, y, current.w, blockH - 2);
+      ctx.strokeStyle = '#1c1a16';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(current.x + 0.75, y + 0.75, current.w - 1.5, blockH - 3.5);
+    }
+
+    // falling pieces
+    for (const f of falling) {
+      ctx.fillStyle = f.color;
+      ctx.globalAlpha = Math.max(0, 1 - (f.y - yForLevel(stack.length)) / H);
+      ctx.fillRect(f.x, f.y + cameraY, f.w, blockH - 2);
+      ctx.globalAlpha = 1;
+    }
+
+    // ground line
+    ctx.strokeStyle = '#1c1a16';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, H - 80 + cameraY + blockH);
+    ctx.lineTo(W, H - 80 + cameraY + blockH);
+    ctx.stroke();
+  }
+
+  function gameOver() {
+    alive = false;
+    audio(150, 0.4, 'sawtooth', 0.16);
+    setTimeout(() => audio(80, 0.4, 'sawtooth', 0.13), 150);
+    vibrate([80, 60, 120]);
+    const best = +(localStorage.getItem('stack_best') || 0);
+    const isNew = score > best;
+    if (isNew) localStorage.setItem('stack_best', score);
+    goScoreEl.textContent = score;
+    goBestEl.textContent = isNew ? score : best;
+    newBestEl.classList.toggle('hidden', !isNew);
+    const runs = +(localStorage.getItem('stack_runs') || 0) + 1;
+    localStorage.setItem('stack_runs', runs);
+    setTimeout(() => gameoverOverlay.classList.remove('hidden'), 400);
+  }
+
+  function start() {
+    fit();
+    stack = [];
+    const baseW = W * 0.55;
+    stack.push({ x: (W - baseW) / 2, w: baseW, color: colorForHeight(0) });
+    score = 0;
+    scoreEl.textContent = 0;
+    bestEl.textContent = +(localStorage.getItem('stack_best') || 0);
+    cameraY = 0; targetCameraY = 0;
+    falling = [];
+    newCurrent();
+    alive = true;
+    lastFrame = performance.now();
+    hintEl.style.opacity = '';
+    startOverlay.classList.add('hidden');
+    gameoverOverlay.classList.add('hidden');
+    requestAnimationFrame(loop);
+  }
+
+  gameEl.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.overlay') || e.target.closest('.back-btn') || e.target.closest('.btn')) return;
+    if (alive) drop();
+  });
+  startBtn.addEventListener('click', start);
+  retryBtn.addEventListener('click', start);
+  window.addEventListener('resize', fit);
+  bestEl.textContent = +(localStorage.getItem('stack_best') || 0);
+  fit();
+})();
+</script>
+</body>
+</html>

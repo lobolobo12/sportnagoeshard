@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#f4ede0" />
+<title>REACT · 反射</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@400;500;700;800&family=Yuji+Boku&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f4ede0;
+    --paper-2: #ece4d1;
+    --ink: #1c1a16;
+    --ink-soft: #3a352d;
+    --faded: #8a7e6a;
+    --rust: #c84a1d;
+    --stamp-red: #b32d23;
+    --mustard: #c69a2a;
+    --olive: #6b6a3a;
+    --teal: #2f6a6a;
+    --rule: rgba(28,26,22,0.18);
+    --f-display: 'RocknRoll One', system-ui, sans-serif;
+    --f-mincho: 'Shippori Mincho', serif;
+    --f-jp: 'Noto Sans JP', system-ui, sans-serif;
+    --f-mono: 'JetBrains Mono', monospace;
+    --f-brush: 'Yuji Boku', serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: var(--paper); color: var(--ink);
+    font-family: var(--f-jp);
+    overscroll-behavior: none;
+  }
+  body { position: fixed; inset: 0; }
+  body::before, body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 100; }
+  body::before {
+    background: repeating-linear-gradient(0deg, rgba(28,26,22,0.04) 0 1px, transparent 1px 3px);
+    mix-blend-mode: multiply;
+  }
+  body::after {
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(28,26,22,0.18) 100%);
+    z-index: 101;
+  }
+
+  #stage {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #stage.idle   { background: radial-gradient(ellipse at top, var(--paper) 0%, var(--paper-2) 100%); }
+  #stage.wait   { background: var(--stamp-red); color: var(--paper); }
+  #stage.go     { background: var(--ink); color: var(--paper); }
+  #stage.early  { background: var(--mustard); color: var(--ink); }
+  #stage.result { background: var(--paper); }
+
+  .big-phase {
+    font-family: var(--f-display);
+    font-size: clamp(4.5rem, 22vw, 9rem);
+    line-height: 0.9;
+    margin: 0 0 14px;
+    color: currentColor;
+    letter-spacing: -0.02em;
+  }
+  .phase-sub-en {
+    font-family: var(--f-display);
+    font-size: clamp(1.2rem, 5vw, 1.8rem);
+    letter-spacing: 0.12em;
+    margin: 0 0 10px;
+    opacity: 0.85;
+  }
+  .phase-sub {
+    font-family: var(--f-mono);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  /* idle / result header */
+  .title-jp {
+    font-family: var(--f-jp);
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.32em;
+    color: var(--faded);
+    margin: 0 0 4px;
+  }
+  .title-en {
+    font-family: var(--f-display);
+    font-size: clamp(2.6rem, 12vw, 4rem);
+    line-height: 0.9;
+    color: var(--ink);
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+  .title-en .kanji {
+    font-family: var(--f-brush);
+    color: var(--stamp-red);
+    font-size: 0.8em;
+    margin-left: 0.15em;
+  }
+  .tag-line {
+    font-family: var(--f-mincho);
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    margin: 6px 0 28px;
+  }
+
+  /* idle stats card */
+  .stats-card {
+    border: 1.5px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    background: var(--paper);
+    padding: 14px 18px;
+    margin: 0 0 24px;
+    min-width: 260px;
+  }
+  .stats-card .row {
+    display: flex; align-items: baseline;
+    font-family: var(--f-mono); font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-soft);
+    line-height: 2;
+  }
+  .stats-card .row .lbl { font-size: 10px; }
+  .stats-card .row .leader { flex: 1; border-bottom: 1px dotted var(--rule); margin: 0 8px; transform: translateY(-3px); }
+  .stats-card .row .val { font-weight: 700; color: var(--ink); font-size: 13px; }
+  .stats-card .row .val.dash { color: var(--faded); }
+
+  .hint {
+    margin-top: 12px;
+    font-family: var(--f-mono);
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    animation: hint-pulse 1.2s infinite alternate;
+  }
+  @keyframes hint-pulse { from { opacity: 0.5; } to { opacity: 1; } }
+
+  /* result */
+  .ms {
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: clamp(4rem, 22vw, 7rem);
+    line-height: 1;
+    color: var(--ink);
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+  .ms .u { font-size: 0.34em; color: var(--faded); margin-left: 6px; letter-spacing: 0.08em; }
+  .ms-label {
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.32em;
+    color: var(--faded);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  /* rank stamp */
+  .rank {
+    margin: 14px 0 8px;
+    display: inline-block;
+    padding: 6px 16px 4px;
+    border: 2.5px solid currentColor;
+    font-family: var(--f-display);
+    font-size: 14px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    transform: rotate(-3deg);
+    background: rgba(180,40,30,0.04);
+    box-shadow: inset 0 0 0 4px var(--paper), inset 0 0 0 5px currentColor;
+  }
+  .rank .kanji { font-family: var(--f-brush); font-size: 18px; margin-right: 8px; }
+  .rank-godlike { color: var(--teal); }
+  .rank-amazing { color: var(--rust); }
+  .rank-great   { color: var(--olive); }
+  .rank-okay    { color: var(--mustard); }
+  .rank-slow    { color: var(--rust); opacity: 0.7; }
+  .rank-asleep  { color: var(--ink-soft); opacity: 0.6; }
+
+  .new-best {
+    color: var(--stamp-red);
+    font-family: var(--f-display);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    margin-top: 6px;
+  }
+
+  .recent {
+    margin-top: 16px;
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .recent-pill {
+    font-family: var(--f-mono);
+    font-size: 11px;
+    border: 1px solid var(--rule);
+    color: var(--ink-soft);
+    padding: 3px 8px;
+    background: var(--paper);
+    letter-spacing: 0.04em;
+  }
+  .recent-pill.best { border-color: var(--rust); color: var(--rust); font-weight: 700; }
+
+  .back-btn {
+    position: absolute;
+    top: env(safe-area-inset-top, 14px);
+    left: 12px;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: currentColor;
+    border: 1px solid currentColor;
+    background: transparent;
+    padding: 5px 10px;
+    text-decoration: none;
+    z-index: 5;
+    opacity: 0.8;
+  }
+  .corner-tag {
+    position: absolute;
+    top: env(safe-area-inset-top, 14px);
+    right: 12px;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: currentColor;
+    opacity: 0.6;
+    z-index: 5;
+  }
+  .corner-tag .kanji { font-family: var(--f-brush); font-size: 14px; margin-right: 4px; }
+</style>
+</head>
+<body>
+<div id="stage" class="idle">
+  <a href="../index.html" class="back-btn">← HUB</a>
+  <div class="corner-tag"><span class="kanji">反</span>NO. 02</div>
+  <div id="content"></div>
+</div>
+
+<script>
+(() => {
+  const stage = document.getElementById('stage');
+  const content = document.getElementById('content');
+
+  const RANKS = [
+    { max: 180, label: 'GODLIKE',     ja: '神', cls: 'rank-godlike' },
+    { max: 220, label: 'AMAZING',     ja: '凄', cls: 'rank-amazing' },
+    { max: 280, label: 'GREAT',       ja: '善', cls: 'rank-great' },
+    { max: 360, label: 'NOT BAD',     ja: '可', cls: 'rank-okay' },
+    { max: 500, label: 'SLOW',        ja: '遅', cls: 'rank-slow' },
+    { max: Infinity, label: 'ASLEEP', ja: '眠', cls: 'rank-asleep' },
+  ];
+  function getRank(ms) { return RANKS.find(r => ms <= r.max); }
+
+  function audio(freq, duration=0.08, type='sine', vol=0.12) { if(localStorage.getItem("settings_mute")==="1")return;
+    try {
+      const c = audio.ctx || (audio.ctx = new (window.AudioContext || window.webkitAudioContext)());
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, c.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
+      osc.connect(gain); gain.connect(c.destination);
+      osc.start(); osc.stop(c.currentTime + duration);
+    } catch(e) {}
+  }
+  function vibrate(ms) { if(localStorage.getItem("settings_haptic_off")==="1")return; if (navigator.vibrate) navigator.vibrate(ms); }
+
+  function getRecent() { try { return JSON.parse(localStorage.getItem('react_recent') || '[]'); } catch(e) { return []; } }
+  function pushRecent(ms) { const r = getRecent(); r.unshift(ms); while (r.length > 5) r.pop(); localStorage.setItem('react_recent', JSON.stringify(r)); }
+  function getBest() { return +(localStorage.getItem('react_best') || 0); }
+  function setBest(ms) { localStorage.setItem('react_best', String(ms)); }
+  function getAvg() { const r = getRecent(); if (!r.length) return 0; return Math.round(r.reduce((a,b)=>a+b,0)/r.length); }
+  function incRuns() { const n = +(localStorage.getItem('react_runs') || 0) + 1; localStorage.setItem('react_runs', String(n)); }
+
+  let phase = 'idle', waitTimeout = null, goAt = 0;
+
+  function renderIdle() {
+    phase = 'idle';
+    stage.className = 'idle';
+    const best = getBest(), avg = getAvg();
+    const runs = +(localStorage.getItem('react_runs') || 0);
+    content.innerHTML = `
+      <div class="title-jp">リアクト · NO. 02</div>
+      <h1 class="title-en">REACT<span class="kanji">反</span></h1>
+      <div class="tag-line">how fast are you really</div>
+      <div class="stats-card">
+        <div class="row"><span class="lbl">Best</span><span class="leader"></span><span class="val ${best?'':'dash'}">${best ? best + ' ms' : '—'}</span></div>
+        <div class="row"><span class="lbl">Avg · 5</span><span class="leader"></span><span class="val ${avg?'':'dash'}">${avg ? avg + ' ms' : '—'}</span></div>
+        <div class="row"><span class="lbl">Runs</span><span class="leader"></span><span class="val">${String(runs).padStart(3,'0')}</span></div>
+      </div>
+      <div class="hint">TAP TO START</div>
+    `;
+  }
+
+  function startWait() {
+    phase = 'wait';
+    stage.className = 'wait';
+    content.innerHTML = `
+      <div class="big-phase">WAIT</div>
+      <div class="phase-sub-en">don't tap yet</div>
+      <div class="phase-sub">tap on green</div>
+    `;
+    const delay = 1200 + Math.random() * 3500;
+    waitTimeout = setTimeout(() => {
+      phase = 'go';
+      stage.className = 'go';
+      goAt = performance.now();
+      content.innerHTML = `
+        <div class="big-phase">TAP!</div>
+        <div class="phase-sub-en">tap now</div>
+        <div class="phase-sub">go · go · go</div>
+      `;
+      audio(800, 0.06, 'square', 0.15);
+      vibrate(20);
+    }, delay);
+  }
+
+  function earlyTap() {
+    clearTimeout(waitTimeout);
+    phase = 'result';
+    stage.className = 'early';
+    content.innerHTML = `
+      <div class="big-phase">TOO SOON</div>
+      <div class="phase-sub-en">patience, friend</div>
+      <div class="hint" style="margin-top: 28px;">TAP TO TRY AGAIN</div>
+    `;
+    audio(150, 0.3, 'sawtooth', 0.18);
+    vibrate([60, 40, 60]);
+  }
+
+  function recordResult() {
+    const ms = Math.round(performance.now() - goAt);
+    phase = 'result';
+    stage.className = 'result';
+    pushRecent(ms);
+    incRuns();
+    const prevBest = getBest();
+    const isNew = !prevBest || ms < prevBest;
+    if (isNew) setBest(ms);
+    const rank = getRank(ms);
+    const recent = getRecent();
+    const recentBest = Math.min(...recent);
+    const recentHtml = recent.map(r => `<span class="recent-pill ${r === recentBest ? 'best' : ''}">${r}</span>`).join('');
+    content.innerHTML = `
+      <div class="ms-label">REACTION TIME</div>
+      <div class="ms">${ms}<span class="u">ms</span></div>
+      <div class="rank ${rank.cls}"><span class="kanji">${rank.ja}</span>${rank.label}</div>
+      ${isNew && prevBest ? '<div class="new-best">★ NEW BEST</div>' : ''}
+      <div class="recent">${recentHtml}</div>
+      <div class="hint" style="margin-top: 24px;">TAP TO TRY AGAIN</div>
+    `;
+    audio(isNew ? 1200 : 700, 0.12, 'sine', 0.12);
+    if (isNew) { setTimeout(() => audio(1600, 0.15, 'sine', 0.12), 120); vibrate([30, 30, 30]); }
+    else vibrate(20);
+  }
+
+  function onTap(e) {
+    if (e && e.target && e.target.classList && e.target.classList.contains('back-btn')) return;
+    if (phase === 'idle' || phase === 'result') startWait();
+    else if (phase === 'wait') earlyTap();
+    else if (phase === 'go') recordResult();
+  }
+
+  stage.addEventListener('pointerdown', (e) => { e.preventDefault(); onTap(e); });
+  renderIdle();
+})();
+</script>
+</body>
+</html>

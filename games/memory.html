@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#f4ede0" />
+<title>MEMORY · 記憶</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@400;500;700;800&family=Yuji+Boku&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f4ede0;
+    --paper-2: #ece4d1;
+    --ink: #1c1a16;
+    --ink-soft: #3a352d;
+    --faded: #8a7e6a;
+    --rust: #c84a1d;
+    --stamp-red: #b32d23;
+    --mustard: #c69a2a;
+    --olive: #6b6a3a;
+    --teal: #2f6a6a;
+    --rule: rgba(28,26,22,0.18);
+    --f-display: 'RocknRoll One', system-ui, sans-serif;
+    --f-mincho: 'Shippori Mincho', serif;
+    --f-jp: 'Noto Sans JP', system-ui, sans-serif;
+    --f-mono: 'JetBrains Mono', monospace;
+    --f-brush: 'Yuji Boku', serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: var(--paper); color: var(--ink);
+    font-family: var(--f-jp);
+    overscroll-behavior: none;
+  }
+  body { position: fixed; inset: 0; }
+  body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 100; background: repeating-linear-gradient(0deg, rgba(28,26,22,0.04) 0 1px, transparent 1px 3px); mix-blend-mode: multiply; }
+  body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 101; background: radial-gradient(ellipse at center, transparent 55%, rgba(28,26,22,0.18) 100%); }
+
+  #game {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at top, var(--paper) 0%, var(--paper-2) 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+
+  .top {
+    position: absolute;
+    top: env(safe-area-inset-top, 14px);
+    left: 0; right: 0;
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 5;
+  }
+  .stat { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.22em; color: var(--ink-soft); text-transform: uppercase; }
+  .stat.right { text-align: right; }
+  .stat .v { display: block; font-family: var(--f-mono); font-weight: 700; color: var(--ink); font-size: 1.7rem; letter-spacing: 0; line-height: 1; margin-top: 2px; }
+  .stat .v.round { color: var(--rust); }
+
+  .status {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--f-display);
+    font-size: 14px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    z-index: 5;
+    white-space: nowrap;
+    text-align: center;
+  }
+  .status .kanji { font-family: var(--f-brush); font-size: 18px; margin-right: 8px; vertical-align: -2px; }
+  .status.watch  { color: var(--olive); }
+  .status.repeat { color: var(--teal); }
+  .status.fail   { color: var(--stamp-red); }
+
+  .pad-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 12px;
+    width: min(88vw, 360px);
+    height: min(88vw, 360px);
+    margin-top: 40px;
+    padding: 12px;
+    border: 1.5px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    background: var(--paper);
+  }
+  .pad {
+    border: 1.5px solid var(--ink);
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: filter 0.08s, transform 0.08s;
+    overflow: hidden;
+  }
+  .pad .glyph {
+    font-family: var(--f-display);
+    font-size: 3.5rem;
+    color: var(--paper);
+    opacity: 0.45;
+    line-height: 1;
+    transition: opacity 0.1s;
+  }
+  .pad[data-c="0"] { background: var(--rust); }
+  .pad[data-c="1"] { background: var(--olive); }
+  .pad[data-c="2"] { background: var(--teal); }
+  .pad[data-c="3"] { background: var(--mustard); }
+  .pad.lit { filter: brightness(1.4) saturate(1.2); transform: scale(1.03); }
+  .pad.lit .glyph { opacity: 1; }
+  .pad.disabled { pointer-events: none; }
+
+  .back-btn {
+    background: var(--paper); color: var(--ink-soft);
+    border: 1px solid var(--ink); padding: 5px 12px;
+    font-family: var(--f-mono); font-size: 10px;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    text-decoration: none; margin-top: 14px;
+    display: inline-block;
+  }
+  .btn {
+    background: var(--rust); color: var(--paper); border: none;
+    padding: 12px 36px; font-family: var(--f-display);
+    font-size: 1.1rem; letter-spacing: 0.16em; text-transform: uppercase;
+    box-shadow: 3px 3px 0 var(--ink); cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+
+  .overlay {
+    position: absolute; inset: 0;
+    background: var(--paper);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 20; padding: 24px; text-align: center;
+    transition: opacity 0.25s;
+  }
+  .overlay.hidden { opacity: 0; pointer-events: none; }
+  .title-jp {
+    font-family: var(--f-jp); font-weight: 700;
+    font-size: 0.85rem; letter-spacing: 0.32em;
+    color: var(--faded); margin: 0 0 4px;
+  }
+  .title-en {
+    font-family: var(--f-display);
+    font-size: clamp(2.6rem, 12vw, 4rem);
+    line-height: 0.9; color: var(--ink);
+    margin: 0 0 8px; letter-spacing: -0.01em;
+  }
+  .title-en .kanji { font-family: var(--f-brush); color: var(--stamp-red); font-size: 0.8em; margin-left: 0.15em; }
+  .tag-line {
+    font-family: var(--f-mincho); font-style: italic;
+    color: var(--ink-soft); font-size: 0.95rem;
+    margin: 6px 0 24px; max-width: 280px;
+  }
+  .rules {
+    color: var(--ink-soft); font-size: 0.85rem;
+    max-width: 280px; margin: 0 0 24px;
+    font-family: var(--f-mincho);
+  }
+
+  .go-receipt {
+    border: 1px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    padding: 14px 18px;
+    margin: 16px 0 20px;
+    background: var(--paper);
+    min-width: 240px;
+  }
+  .go-receipt .row {
+    display: flex; align-items: baseline;
+    font-family: var(--f-mono); font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-soft); line-height: 2;
+  }
+  .go-receipt .leader { flex: 1; border-bottom: 1px dotted var(--rule); margin: 0 8px; transform: translateY(-3px); }
+  .go-receipt .val { font-weight: 700; color: var(--ink); font-size: 14px; }
+  .new-best {
+    color: var(--stamp-red); font-family: var(--f-display);
+    font-size: 12px; letter-spacing: 0.3em; margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+<div id="game">
+  <div class="top">
+    <div class="stat">
+      <span>ROUND</span>
+      <span class="v round" id="round">1</span>
+    </div>
+    <div class="stat right">
+      <span>BEST · 記</span>
+      <span class="v" id="best">0</span>
+    </div>
+  </div>
+
+  <div class="status" id="status">TAP START</div>
+
+  <div class="pad-grid" id="pads">
+    <div class="pad disabled" data-c="0"><span class="glyph">1</span></div>
+    <div class="pad disabled" data-c="1"><span class="glyph">2</span></div>
+    <div class="pad disabled" data-c="2"><span class="glyph">3</span></div>
+    <div class="pad disabled" data-c="3"><span class="glyph">4</span></div>
+  </div>
+
+  <div class="overlay" id="start-overlay">
+    <div class="title-jp">メモリー · NO. 03</div>
+    <h1 class="title-en">MEMORY<span class="kanji">記</span></h1>
+    <div class="tag-line">repeat the pattern</div>
+    <div class="rules">Pads light up in a sequence. Repeat them in order. Each round adds one more. Don't blink.</div>
+    <button class="btn" id="start-btn">START</button>
+    <a href="../index.html" class="back-btn">← HUB</a>
+  </div>
+
+  <div class="overlay hidden" id="gameover-overlay">
+    <div class="title-jp" style="color: var(--stamp-red);">失敗 · GAME OVER</div>
+    <h1 class="title-en" style="font-size: clamp(2rem, 9vw, 3rem);">GAME<span class="kanji">失</span></h1>
+    <div class="new-best hidden" id="new-best">★ NEW BEST</div>
+    <div class="go-receipt">
+      <div class="row"><span>Reached</span><span class="leader"></span><span class="val" id="go-round">1</span></div>
+      <div class="row"><span>Best</span><span class="leader"></span><span class="val" id="go-best" style="color: var(--rust);">0</span></div>
+      <div class="row hidden" id="challenge-result-row"><span>Challenge</span><span class="leader"></span><span class="val" id="challenge-result">—</span></div>
+    </div>
+    <button class="btn" id="retry-btn">TRY AGAIN</button>
+    <button class="back-btn" id="share-btn" style="background: var(--paper); margin-top: 8px;">📤 CHALLENGE A FRIEND</button>
+    <a href="../index.html" class="back-btn">← HUB</a>
+  </div>
+</div>
+
+<script>
+(() => {
+  const PADS = [...document.querySelectorAll('.pad')];
+  const roundEl = document.getElementById('round');
+  const bestEl = document.getElementById('best');
+  const statusEl = document.getElementById('status');
+  const startOverlay = document.getElementById('start-overlay');
+  const gameoverOverlay = document.getElementById('gameover-overlay');
+  const startBtn = document.getElementById('start-btn');
+  const retryBtn = document.getElementById('retry-btn');
+  const goRoundEl = document.getElementById('go-round');
+  const goBestEl = document.getElementById('go-best');
+  const newBestEl = document.getElementById('new-best');
+
+  const TONES = [261.63, 329.63, 392.00, 523.25];
+  let sequence = [], userIdx = 0, playing = false, acceptingInput = false;
+
+  // ── seeded RNG for ?seed= challenges ──
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  function hashSeed(str){let h=2166136261>>>0;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+  const urlParams = new URLSearchParams(location.search);
+  const seedStr = urlParams.get('seed') || '';
+  const beatScore = +(urlParams.get('beat')) || 0;
+  let seededRand = null;
+  function resetRng(){ seededRand = seedStr ? mulberry32(hashSeed(seedStr)) : null; }
+  resetRng();
+  function rng(){ return seededRand ? seededRand() : Math.random(); }
+  function lsGet(k, f){ const v = localStorage.getItem(k); return v === null ? f : v; }
+
+  function audio(freq, duration=0.25, vol=0.18) { if(localStorage.getItem("settings_mute")==="1")return;
+    try {
+      const c = audio.ctx || (audio.ctx = new (window.AudioContext || window.webkitAudioContext)());
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = 'sine'; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, c.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
+      osc.connect(gain); gain.connect(c.destination);
+      osc.start(); osc.stop(c.currentTime + duration);
+    } catch(e) {}
+  }
+  function vibrate(ms) { if(localStorage.getItem("settings_haptic_off")==="1")return; if (navigator.vibrate) navigator.vibrate(ms); }
+
+  function getBest() { return +(localStorage.getItem('memory_best') || 0); }
+  function setBest(n) { localStorage.setItem('memory_best', String(n)); }
+  function incRuns() { const n = +(localStorage.getItem('memory_runs') || 0) + 1; localStorage.setItem('memory_runs', String(n)); }
+
+  function lightPad(idx, dur=400) {
+    return new Promise(resolve => {
+      const pad = PADS[idx];
+      pad.classList.add('lit');
+      audio(TONES[idx], dur / 1000 + 0.05);
+      setTimeout(() => {
+        pad.classList.remove('lit');
+        setTimeout(resolve, 100);
+      }, dur);
+    });
+  }
+
+  async function playSequence() {
+    acceptingInput = false;
+    PADS.forEach(p => p.classList.add('disabled'));
+    setStatus('watch', 'WATCH');
+    await new Promise(r => setTimeout(r, 600));
+    const speed = Math.max(180, 500 - (sequence.length - 1) * 30);
+    for (const idx of sequence) await lightPad(idx, speed);
+    setStatus('repeat', 'YOUR TURN');
+    userIdx = 0;
+    PADS.forEach(p => p.classList.remove('disabled'));
+    acceptingInput = true;
+  }
+
+  function setStatus(cls, text, kanji='') {
+    statusEl.className = 'status ' + (cls || '');
+    statusEl.innerHTML = kanji ? `<span class="kanji">${kanji}</span>${text}` : text;
+  }
+
+  function updateRound() {
+    roundEl.textContent = sequence.length;
+    bestEl.textContent = getBest();
+  }
+
+  function nextRound() {
+    sequence.push(Math.floor(rng() * 4));
+    updateRound();
+    playSequence();
+  }
+
+  function start() {
+    resetRng();
+    playing = true;
+    sequence = []; userIdx = 0;
+    bestEl.textContent = getBest();
+    startOverlay.classList.add('hidden');
+    gameoverOverlay.classList.add('hidden');
+    incRuns();
+    nextRound();
+  }
+
+  async function gameOver() {
+    playing = false;
+    acceptingInput = false;
+    PADS.forEach(p => p.classList.add('disabled'));
+    setStatus('fail', 'WRONG');
+    audio(120, 0.6, 0.18);
+    setTimeout(() => audio(80, 0.5, 0.15), 200);
+    vibrate([80, 60, 80, 60, 120]);
+    for (let i = 0; i < 3; i++) {
+      PADS.forEach(p => p.classList.add('lit'));
+      await new Promise(r => setTimeout(r, 120));
+      PADS.forEach(p => p.classList.remove('lit'));
+      await new Promise(r => setTimeout(r, 120));
+    }
+    // Round HUD displays sequence.length while playing — match it here
+    const reached = sequence.length;
+    const best = getBest();
+    const isNew = reached > best;
+    if (isNew) setBest(reached);
+    goRoundEl.textContent = reached;
+    goBestEl.textContent = isNew ? reached : best;
+    newBestEl.classList.toggle('hidden', !isNew);
+
+    const challengeRow = document.getElementById('challenge-result-row');
+    const challengeResultEl = document.getElementById('challenge-result');
+    if (beatScore > 0) {
+      const me = reached - 1; // rounds successfully completed
+      const won = me > beatScore;
+      const tied = me === beatScore;
+      challengeResultEl.textContent = won ? `+${me - beatScore} BEAT IT` : tied ? 'TIED' : `${beatScore - me} SHORT`;
+      challengeResultEl.style.color = won ? 'var(--teal)' : tied ? 'var(--mustard)' : 'var(--stamp-red)';
+      challengeRow.classList.remove('hidden');
+    } else {
+      challengeRow.classList.add('hidden');
+    }
+
+    gameoverOverlay.classList.remove('hidden');
+  }
+
+  function onPad(idx) {
+    if (!acceptingInput || !playing) return;
+    lightPad(idx, 200);
+    vibrate(15);
+    if (sequence[userIdx] === idx) {
+      userIdx++;
+      if (userIdx >= sequence.length) {
+        acceptingInput = false;
+        setTimeout(nextRound, 500);
+      }
+    } else gameOver();
+  }
+
+  PADS.forEach((pad, idx) => {
+    pad.addEventListener('pointerdown', (e) => { e.preventDefault(); onPad(idx); });
+  });
+  // ── share / challenge ──
+  function generateSeed(){const c='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++)s+=c[Math.floor(Math.random()*c.length)];return s}
+  function buildChallengeURL(score){
+    const seed = seedStr || generateSeed();
+    const url = new URL(location.href.split('?')[0].split('#')[0]);
+    url.searchParams.set('seed', seed);
+    url.searchParams.set('beat', score);
+    return url.href;
+  }
+  function shareChallenge(){
+    const reached = sequence.length - 1; // rounds completed (the failed attempt doesn't count)
+    const url = buildChallengeURL(reached);
+    const name = lsGet('player_name', '');
+    const who = name || 'I';
+    const text = `HARD ARCADE · MEMORY\n${who} reached round ${reached} — beat me?\n${url}`;
+    if (navigator.share) navigator.share({ text }).catch(() => copyText(text));
+    else copyText(text);
+  }
+  function copyText(text){
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => flashShare('LINK COPIED'), () => fallbackCopy(text));
+    } else fallbackCopy(text);
+  }
+  function fallbackCopy(text){
+    const ta = document.createElement('textarea'); ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); flashShare('LINK COPIED'); } catch(_) { prompt('Copy:', text); }
+    document.body.removeChild(ta);
+  }
+  function flashShare(msg){
+    const btn = document.getElementById('share-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ ' + msg;
+    setTimeout(() => { btn.textContent = orig; }, 1800);
+  }
+
+  startBtn.addEventListener('click', start);
+  retryBtn.addEventListener('click', start);
+  document.getElementById('share-btn').addEventListener('click', shareChallenge);
+  bestEl.textContent = getBest();
+
+  // Show challenge banner at game start if beat param present
+  if (beatScore > 0) {
+    statusEl.textContent = `BEAT FRIEND · ${beatScore} ROUNDS`;
+    statusEl.className = 'status repeat';
+  }
+})();
+</script>
+</body>
+</html>

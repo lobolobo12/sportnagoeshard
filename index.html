@@ -2,245 +2,1219 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>The Excuse Machine 3000</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#f6f1e6" />
+<title>HARD ARCADE · ハードアーケード</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@400;500;700;800&family=Yuji+Boku&family=JetBrains+Mono:wght@400;500;700&family=DotGothic16&display=swap" rel="stylesheet" />
+
 <style>
   :root {
-    --bg: #0f0f1a;
-    --card: #1a1a2e;
-    --accent: #ff4081;
-    --accent-2: #7c4dff;
-    --text: #f5f5f5;
-    --muted: #a0a0b8;
+    --paper:        #f4ede0;
+    --paper-2:      #ece4d1;
+    --paper-3:      #e0d5bb;
+    --ink:          #1c1a16;
+    --ink-soft:     #3a352d;
+    --faded:        #8a7e6a;
+    --faded-2:      #b3a78f;
+    --rust:         #c84a1d;
+    --rust-dark:    #9a3514;
+    --stamp-red:    #b32d23;
+    --mustard:      #c69a2a;
+    --olive:        #6b6a3a;
+    --teal:         #2f6a6a;
+    --rule:         rgba(28,26,22,0.18);
+    --rule-strong:  rgba(28,26,22,0.5);
+
+    --f-display: 'RocknRoll One', 'Noto Sans JP', system-ui, sans-serif;
+    --f-mincho:  'Shippori Mincho', 'Times New Roman', serif;
+    --f-jp:      'Noto Sans JP', system-ui, sans-serif;
+    --f-mono:    'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+    --f-pixel:   'DotGothic16', monospace;
+    --f-brush:   'Yuji Boku', serif;
   }
-  * { box-sizing: border-box; }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--f-jp);
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    min-height: 100%;
+  }
   body {
-    margin: 0;
+    background:
+      /* paper grain via layered radial dots */
+      radial-gradient(circle at 17% 23%, rgba(180,160,120,0.18) 0%, transparent 1.2%),
+      radial-gradient(circle at 73% 51%, rgba(180,160,120,0.15) 0%, transparent 1%),
+      radial-gradient(circle at 41% 81%, rgba(180,160,120,0.16) 0%, transparent 1.3%),
+      radial-gradient(circle at 88% 12%, rgba(180,160,120,0.12) 0%, transparent 1%),
+      radial-gradient(ellipse at top, var(--paper) 0%, var(--paper-2) 100%);
+    background-attachment: fixed;
+    padding: env(safe-area-inset-top, 24px) 0 env(safe-area-inset-bottom, 32px);
     min-height: 100vh;
-    background: radial-gradient(circle at top, #1a1a2e 0%, #0f0f1a 100%);
-    color: var(--text);
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    position: relative;
+  }
+  /* CRT scanlines + vignette overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    background:
+      repeating-linear-gradient(
+        0deg,
+        rgba(28,26,22,0.035) 0px,
+        rgba(28,26,22,0.035) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+    mix-blend-mode: multiply;
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 101;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(28,26,22,0.18) 100%);
+  }
+
+  .wrap {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 24px 18px 32px;
+    position: relative;
+  }
+
+  /* ─── header / logotype ─── */
+  .marquee {
+    border: 1.5px solid var(--ink);
+    padding: 18px 18px 14px;
+    position: relative;
+    background: var(--paper);
+    box-shadow:
+      4px 4px 0 var(--ink),
+      inset 0 0 0 4px var(--paper),
+      inset 0 0 0 5px var(--rule);
+  }
+  .marquee::before {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border: 0.5px solid var(--rule-strong);
+    pointer-events: none;
+  }
+  .marquee-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--faded);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .marquee-top .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--rust);
+    display: inline-block;
+    margin-right: 6px;
+    box-shadow: 0 0 6px var(--rust);
+    animation: blink 2.4s infinite;
+    vertical-align: middle;
+  }
+  @keyframes blink {
+    0%, 70%, 100% { opacity: 1; }
+    72%, 90%    { opacity: 0.15; }
+  }
+  .logotype {
+    font-family: var(--f-display);
+    font-size: clamp(2.3rem, 9vw, 3.2rem);
+    line-height: 0.95;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    margin: 0;
+    text-transform: none;
+  }
+  .logotype .ja {
+    display: block;
+    font-family: var(--f-display);
+    color: var(--rust);
+    text-shadow:
+      2px 2px 0 var(--paper),
+      4px 4px 0 var(--ink);
+  }
+  .logotype .en {
+    display: block;
+    font-family: var(--f-mincho);
+    font-weight: 800;
+    font-size: 0.42em;
+    letter-spacing: 0.14em;
+    color: var(--ink);
+    margin-top: 6px;
+    border-top: 1px solid var(--rule);
+    padding-top: 6px;
+  }
+  .marquee-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--rule);
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.15em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+  .marquee-meta .corners {
+    color: var(--rust-dark);
+    font-weight: 700;
+  }
+
+  /* corner kanji decoration on marquee */
+  .kanji-corner {
+    position: absolute;
+    font-family: var(--f-brush);
+    color: var(--stamp-red);
+    opacity: 0.85;
+    pointer-events: none;
+    line-height: 1;
+  }
+  .kanji-corner.tl { top: -14px; left: -10px; font-size: 32px; transform: rotate(-8deg); }
+  .kanji-corner.br { bottom: -10px; right: -8px; font-size: 28px; transform: rotate(6deg); }
+
+  /* ─── streak stamp ─── */
+  .streak-stamp {
+    margin: 22px auto 0;
+    width: max-content;
+    transform: rotate(-3deg);
+    border: 2.5px solid var(--stamp-red);
+    color: var(--stamp-red);
+    padding: 6px 14px 4px;
+    font-family: var(--f-display);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    position: relative;
+    background: rgba(180,40,30,0.04);
+    box-shadow: inset 0 0 0 4px var(--paper), inset 0 0 0 5px var(--stamp-red);
+  }
+  .streak-stamp .ja {
+    font-family: var(--f-jp);
+    font-weight: 900;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    display: block;
+    text-align: center;
+    color: var(--stamp-red);
+    opacity: 0.85;
+  }
+  .streak-stamp .big {
+    font-family: var(--f-mono);
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 1;
+    color: var(--stamp-red);
+  }
+  .streak-stamp.hidden { display: none; }
+
+  /* ─── section label ─── */
+  .section-label {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 28px 2px 12px;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .section-label .ja {
+    font-family: var(--f-jp);
+    font-weight: 700;
+    color: var(--faded);
+    letter-spacing: 0.1em;
+  }
+  .section-label .count {
+    color: var(--rust-dark);
+    font-weight: 700;
+  }
+
+  /* ─── ticket card grid ─── */
+  .cabinets {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* TICKET STUB card */
+  .ticket {
+    position: relative;
+    background: var(--paper);
+    display: grid;
+    grid-template-columns: 78px 1fr;
+    text-decoration: none;
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: transform 0.1s, box-shadow 0.1s;
+    overflow: hidden;
+  }
+  .ticket:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--ink);
+  }
+  /* perforated divider between stub and body */
+  .ticket::before {
+    content: '';
+    position: absolute;
+    left: 78px;
+    top: 0; bottom: 0;
+    width: 0;
+    border-left: 1px dashed var(--ink);
+    opacity: 0.55;
+  }
+  /* punch holes */
+  .ticket::after {
+    content: '';
+    position: absolute;
+    left: 78px;
+    top: -7px;
+    width: 14px; height: 14px;
+    margin-left: -7px;
+    border-radius: 50%;
+    background: var(--paper-2);
+    border: 1.5px solid var(--ink);
+    box-shadow:
+      0 calc(100% + 14px) 0 -1px var(--paper-2),
+      0 calc(100% + 14px) 0 0.5px var(--ink);
+  }
+
+  .ticket .stub {
+    background: var(--ink);
+    color: var(--paper);
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 20px;
+    justify-content: space-between;
+    padding: 12px 6px 14px;
+    position: relative;
   }
-  h1 {
-    font-size: clamp(2rem, 6vw, 3.5rem);
-    margin: 0 0 4px;
-    background: linear-gradient(90deg, var(--accent), var(--accent-2));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-align: center;
-    letter-spacing: -1px;
+  .ticket .stub .no {
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    color: var(--paper-3);
+    opacity: 0.7;
   }
-  .subtitle {
-    color: var(--muted);
-    margin-bottom: 32px;
-    font-size: 0.95rem;
-    text-align: center;
+  .ticket .stub .glyph {
+    font-family: var(--f-brush);
+    font-size: 42px;
+    line-height: 1;
+    color: var(--paper);
+    margin: 6px 0;
   }
-  .card {
-    background: var(--card);
-    border: 1px solid #2a2a44;
-    border-radius: 20px;
-    padding: 32px 28px;
-    max-width: 600px;
-    width: 100%;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  .ticket .stub .mini {
+    font-family: var(--f-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.2em;
+    color: var(--rust);
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.85;
   }
-  .excuse {
-    font-size: clamp(1.1rem, 3vw, 1.4rem);
-    line-height: 1.5;
-    min-height: 120px;
+
+  .ticket .body {
+    padding: 12px 14px 12px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 110px;
+    position: relative;
+  }
+  .ticket .body .row1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .ticket .name-block { min-width: 0; flex: 1; }
+  .ticket .name-jp {
+    font-family: var(--f-jp);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--faded);
+    margin-bottom: 1px;
+  }
+  .ticket .name-en {
+    font-family: var(--f-display);
+    font-size: 22px;
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .ticket .price {
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    color: var(--ink-soft);
+    text-align: right;
+    flex-shrink: 0;
+    border-left: 1px solid var(--rule);
+    padding-left: 8px;
+  }
+  .ticket .price .v {
+    display: block;
+    font-weight: 700;
+    color: var(--rust);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+  }
+  .ticket .price .v.dash { color: var(--faded-2); }
+  .ticket .desc {
+    font-family: var(--f-mincho);
+    font-style: italic;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--ink-soft);
+    margin: 8px 0 0;
+  }
+  .ticket .row2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--rule);
+  }
+  .ticket .row2 .tag {
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.2em;
+    color: var(--faded);
+    text-transform: uppercase;
+  }
+  .ticket .play {
+    font-family: var(--f-display);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    color: var(--paper);
+    background: var(--rust);
+    padding: 4px 12px 3px;
+    text-transform: uppercase;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .ticket .play::after {
+    content: ' →';
+  }
+
+  /* "coming soon" ticket — dashed border, no shadow */
+  .ticket.soon {
+    border: 1.5px dashed var(--ink);
+    box-shadow: none;
+    opacity: 0.55;
+    cursor: default;
+  }
+  .ticket.soon:active { transform: none; box-shadow: none; }
+  .ticket.soon .stub { background: transparent; color: var(--ink); border-right: 1.5px dashed var(--ink); }
+  .ticket.soon .stub .glyph { color: var(--ink); opacity: 0.5; }
+  .ticket.soon .stub .no { color: var(--faded); }
+  .ticket.soon .stub .mini { display: none; }
+  .ticket.soon .play { display: none; }
+  .ticket.soon::after {
+    background: var(--paper);
+    border: 1.5px dashed var(--ink);
+    box-shadow:
+      0 calc(100% + 14px) 0 -1px var(--paper),
+      0 calc(100% + 14px) 0 0.5px var(--ink);
+  }
+
+  /* ─── receipt block (lifetime stats) ─── */
+  .receipt {
+    margin-top: 28px;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    padding: 16px 18px;
+    box-shadow: 3px 3px 0 var(--ink);
+    position: relative;
+  }
+  .receipt::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: 0; right: 0;
+    height: 6px;
+    background:
+      linear-gradient(135deg, var(--ink) 25%, transparent 25%) 0 0/8px 6px,
+      linear-gradient(225deg, var(--ink) 25%, transparent 25%) 0 0/8px 6px;
+    background-position: 0 -1px;
+  }
+  .receipt::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 6px;
+    background:
+      linear-gradient(45deg, var(--ink) 25%, transparent 25%) 0 100%/8px 6px,
+      linear-gradient(315deg, var(--ink) 25%, transparent 25%) 0 100%/8px 6px;
+    background-position: 0 1px;
+  }
+  .receipt-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    border-bottom: 1px dashed var(--rule);
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .receipt-head .ja {
+    font-family: var(--f-jp);
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--rust);
+  }
+  .receipt-row {
+    display: flex;
+    align-items: baseline;
+    font-family: var(--f-mono);
+    font-size: 12px;
+    color: var(--ink);
+    line-height: 1.9;
+  }
+  .receipt-row .lbl {
+    font-size: 10.5px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .receipt-row .leader {
+    flex: 1;
+    border-bottom: 1px dotted var(--rule-strong);
+    margin: 0 6px;
+    transform: translateY(-4px);
+  }
+  .receipt-row .val {
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+  }
+
+  /* ─── footer ─── */
+  footer {
+    margin-top: 24px;
+    padding: 14px 0 0;
+    border-top: 1px dashed var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--faded);
+  }
+  footer a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 1px;
+  }
+  footer .ja {
+    font-family: var(--f-jp);
+    color: var(--rust-dark);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  /* tiny floating sticker motif */
+  .sticker {
+    position: absolute;
+    font-family: var(--f-brush);
+    color: var(--mustard);
+    pointer-events: none;
+    opacity: 0.5;
+    z-index: 1;
+  }
+  .sticker.s1 { top: 200px; right: -2px; font-size: 38px; transform: rotate(12deg); color: var(--olive); }
+  .sticker.s2 { top: 520px; left: -6px; font-size: 32px; transform: rotate(-14deg); color: var(--teal); }
+  .sticker.s3 { bottom: 220px; right: 0; font-size: 36px; transform: rotate(8deg); color: var(--mustard); }
+
+  @media (min-width: 540px) {
+    .cabinets { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ── settings ── */
+  .settings-btn {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 8px) + 8px);
+    right: 12px;
+    width: 38px; height: 38px;
+    background: var(--paper);
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    box-shadow: 2px 2px 0 var(--ink);
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 50;
+    transition: transform 0.1s;
+  }
+  .settings-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+  .settings-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(28,26,22,0.6);
+    z-index: 200;
     display: flex;
     align-items: center;
     justify-content: center;
-    text-align: center;
-    padding: 16px;
-    background: #0f0f1a;
-    border-radius: 12px;
-    margin-bottom: 24px;
-    transition: transform 0.2s;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
   }
-  .excuse.shake { animation: shake 0.4s; }
-  @keyframes shake {
-    0%,100% { transform: translateX(0); }
-    25% { transform: translateX(-8px); }
-    75% { transform: translateX(8px); }
+  .settings-overlay.show { opacity: 1; pointer-events: auto; }
+  .settings-panel {
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    padding: 22px 22px 18px;
+    width: 100%;
+    max-width: 360px;
+    font-family: var(--f-jp);
   }
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    justify-content: center;
+  .settings-panel h2 {
+    font-family: var(--f-display);
+    font-size: 1.6rem;
+    letter-spacing: 0.06em;
+    margin: 0 0 4px;
+    color: var(--ink);
   }
-  button {
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    color: white;
-    border: none;
-    padding: 14px 24px;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
-  }
-  button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,64,129,0.3); }
-  button:active { transform: translateY(0); }
-  button.secondary {
-    background: #2a2a44;
-    color: var(--text);
-  }
-  .category {
-    display: inline-block;
-    background: rgba(124, 77, 255, 0.2);
-    color: var(--accent-2);
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    margin-bottom: 16px;
-    font-weight: 600;
+  .settings-panel .sub {
+    font-family: var(--f-jp);
+    font-size: 0.75rem;
+    letter-spacing: 0.22em;
+    color: var(--faded);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    margin-bottom: 16px;
   }
-  .counter {
-    color: var(--muted);
-    margin-top: 24px;
-    font-size: 0.85rem;
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-top: 1px dashed var(--rule);
+    font-family: var(--f-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--ink);
   }
-  footer {
-    margin-top: 32px;
-    color: var(--muted);
-    font-size: 0.8rem;
+  .settings-row:first-of-type { border-top: none; }
+  .settings-row label { cursor: pointer; flex: 1; padding-right: 12px; }
+  .settings-row .lbl-jp {
+    display: block;
+    font-family: var(--f-jp);
+    font-size: 10px;
+    color: var(--faded);
+    letter-spacing: 0.16em;
+    margin-bottom: 2px;
+  }
+  .toggle {
+    width: 42px; height: 22px;
+    border: 1.5px solid var(--ink);
+    border-radius: 12px;
+    background: var(--paper-2);
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 1.5px; left: 1.5px;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: var(--ink);
+    transition: transform 0.15s;
+  }
+  .toggle.on { background: var(--rust); }
+  .toggle.on::after { transform: translateX(20px); background: var(--paper); }
+
+  .nick-input {
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px 10px;
+    border: 1.5px solid var(--ink);
+    background: var(--paper-2);
+    font-family: var(--f-mono);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    text-transform: uppercase;
+    outline: none;
+  }
+  .nick-input:focus { background: var(--paper); }
+
+  .settings-close-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 18px;
+    gap: 10px;
+  }
+  .settings-close-btn {
+    background: var(--rust);
+    color: var(--paper);
+    border: none;
+    padding: 8px 22px;
+    font-family: var(--f-display);
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    box-shadow: 2px 2px 0 var(--ink);
+    cursor: pointer;
+  }
+  .settings-close-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+
+  /* ─── featured card (today's pick) ─── */
+  .featured-wrap { margin-bottom: 18px; }
+  .featured {
+    display: grid;
+    grid-template-columns: 104px 1fr;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    box-shadow: 5px 5px 0 var(--ink);
+    text-decoration: none;
+    color: var(--ink);
+    position: relative;
+    overflow: hidden;
+    min-height: 168px;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .featured:active { transform: translate(2px, 2px); box-shadow: 3px 3px 0 var(--ink); }
+  .featured::before {
+    content: '';
+    position: absolute;
+    left: 104px; top: 0; bottom: 0;
+    border-left: 1px dashed var(--ink);
+    opacity: 0.5;
+  }
+  .featured::after {
+    content: '';
+    position: absolute;
+    left: 104px; top: -8px;
+    width: 16px; height: 16px;
+    margin-left: -8px;
+    border-radius: 50%;
+    background: var(--paper-2);
+    border: 1.5px solid var(--ink);
+    box-shadow:
+      0 calc(100% + 16px) 0 -1px var(--paper-2),
+      0 calc(100% + 16px) 0 0.5px var(--ink);
+  }
+  .featured .stub {
+    background: var(--ink);
+    color: var(--paper);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 8px 16px;
+    position: relative;
+  }
+  .featured .stub .no {
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--paper-3);
+    opacity: 0.7;
+  }
+  .featured .stub .glyph {
+    font-family: var(--f-brush);
+    font-size: 60px;
+    line-height: 1;
+    color: var(--paper);
+  }
+  .featured .stub .mini {
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.22em;
+    color: var(--rust);
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.9;
+  }
+  .featured .body {
+    padding: 14px 18px 14px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+  }
+  .featured .pick-tag {
+    font-family: var(--f-display);
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    color: var(--stamp-red);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .featured .name-jp {
+    font-family: var(--f-jp);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    color: var(--faded);
+    margin-bottom: 1px;
+  }
+  .featured .name-en {
+    font-family: var(--f-display);
+    font-size: clamp(1.6rem, 8vw, 2.1rem);
+    line-height: 0.95;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    margin: 0 0 6px;
+  }
+  .featured .desc {
+    font-family: var(--f-mincho);
+    font-style: italic;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+    margin: 0 0 12px;
+  }
+  .featured .row2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 1px dashed var(--rule);
+    margin-top: auto;
+  }
+  .featured .price-mini {
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.2em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+  .featured .price-mini .v {
+    color: var(--rust);
+    font-weight: 700;
+  }
+  .featured .play-big {
+    font-family: var(--f-display);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    color: var(--paper);
+    background: var(--rust);
+    padding: 5px 14px 4px;
+    box-shadow: 2px 2px 0 var(--ink);
+    text-transform: uppercase;
+  }
+
+  /* ─── tight 3-col grid ─── */
+  .grid-cabinets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .grid-card {
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    box-shadow: 2px 2px 0 var(--ink);
+    padding: 10px 6px 8px;
+    text-decoration: none;
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    min-height: 100px;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .grid-card:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+  .grid-card .no {
+    font-family: var(--f-mono);
+    font-size: 8px;
+    letter-spacing: 0.16em;
+    color: var(--faded);
+    position: absolute;
+    top: 4px;
+    left: 5px;
+  }
+  .grid-card .accent-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--card-color, var(--rust));
+  }
+  .grid-card .glyph {
+    font-family: var(--f-brush);
+    font-size: 28px;
+    color: var(--ink);
+    line-height: 1;
+    margin: 8px 0 2px;
+  }
+  .grid-card .name {
+    font-family: var(--f-display);
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    color: var(--ink);
     text-align: center;
+    line-height: 1;
+    margin-bottom: 4px;
   }
+  .grid-card .best {
+    font-family: var(--f-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    color: var(--faded);
+    margin-top: auto;
+  }
+  .grid-card .best .v {
+    color: var(--rust);
+    font-weight: 700;
+  }
+  .grid-card.is-featured {
+    border-color: var(--stamp-red);
+    box-shadow: 2px 2px 0 var(--stamp-red);
+  }
+  .grid-card.is-featured .accent-dot {
+    background: var(--stamp-red);
+    box-shadow: 0 0 6px var(--stamp-red);
+  }
+  .grid-card.soon {
+    border: 1.5px dashed var(--ink);
+    box-shadow: none;
+    opacity: 0.45;
+    cursor: default;
+    pointer-events: none;
+  }
+  .grid-card.soon .glyph { opacity: 0.5; }
+  .grid-card.soon .name { color: var(--faded); }
+
 </style>
 </head>
 <body>
-  <h1>The Excuse Machine 3000</h1>
-  <p class="subtitle">Get out of literally anything. Backed by zero science.</p>
+<div class="wrap">
 
-  <div class="card">
-    <div class="category" id="category">Tap a button</div>
-    <div class="excuse" id="excuse">Why are you here? Pick a situation below and let the machine cook.</div>
-    <div class="controls">
-      <button onclick="generate('work')">Work</button>
-      <button onclick="generate('school')">School</button>
-      <button onclick="generate('date')">Date</button>
-      <button onclick="generate('gym')">Gym</button>
-      <button onclick="generate('family')">Family</button>
-      <button onclick="generate('random')" class="secondary">Surprise me</button>
+  <button class="settings-btn" id="settings-btn" aria-label="Settings">⚙</button>
+
+  <header class="marquee">
+    <span class="kanji-corner tl">遊</span>
+    <span class="kanji-corner br">場</span>
+
+    <div class="marquee-top">
+      <span><span class="dot"></span>NOW PLAYING</span>
+      <span id="player-name-display">NO. 001 / 円 ¥100</span>
     </div>
-    <div class="counter" id="counter">Excuses generated: 0</div>
+
+    <h1 class="logotype">
+      <span class="ja">ハードアーケード</span>
+      <span class="en">HARD · ARCADE · 強</span>
+    </h1>
+
+    <div class="marquee-meta">
+      <span>EST. 2026</span>
+      <span class="corners">11 CABINETS</span>
+      <span>TOKYO · ∞</span>
+    </div>
+  </header>
+
+  <div class="streak-stamp hidden" id="streak-stamp">
+    <span class="ja">連続プレイ</span>
+    <span class="big" id="streak-num">0</span>
+    DAY STREAK
   </div>
 
-  <footer>built when bored · no excuses are guaranteed to work</footer>
+  <div class="featured-wrap">
+    <div class="section-label">
+      <span>TODAY'S PICK · <span class="ja">本日</span></span>
+      <span class="count" id="featured-date">--.--.--</span>
+    </div>
+    <a class="featured" id="featured-card" href="#"></a>
+  </div>
+
+  <div class="section-label">
+    <span>CABINETS · <span class="ja">筐体</span></span>
+    <span class="count">11 / 12</span>
+  </div>
+
+  <div class="grid-cabinets" id="grid-cabinets"></div>
+
+  <div class="receipt">
+    <div class="receipt-head">
+      <span>RECEIPT</span>
+      <span class="ja">通算記録</span>
+      <span id="receipt-date">--.--.--</span>
+    </div>
+    <div class="receipt-row">
+      <span class="lbl">Total Runs</span>
+      <span class="leader"></span>
+      <span class="val" id="lt-runs">000</span>
+    </div>
+    <div class="receipt-row">
+      <span class="lbl">Total Taps</span>
+      <span class="leader"></span>
+      <span class="val" id="lt-taps">000</span>
+    </div>
+    <div class="receipt-row">
+      <span class="lbl">★ Achievements</span>
+      <span class="leader"></span>
+      <span class="val" id="lt-ach">00/20</span>
+    </div>
+    <div class="receipt-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--rule);">
+      <span class="lbl" style="font-weight: 700; color: var(--rust);">Subtotal</span>
+      <span class="leader"></span>
+      <span class="val" style="color: var(--rust);">¥<span id="lt-yen">0</span></span>
+    </div>
+  </div>
+
+  <footer>
+    <span>MADE WHEN BORED</span>
+    <span class="ja">退屈の友</span>
+    <a href="https://github.com/lobolobo12/sportnagoeshard" target="_blank">SOURCE ↗</a>
+  </footer>
+
+  <span class="sticker s1">勝</span>
+  <span class="sticker s2">押</span>
+  <span class="sticker s3">速</span>
+</div>
+
+<div class="settings-overlay" id="settings-overlay">
+  <div class="settings-panel">
+    <h2>SETTINGS</h2>
+    <div class="sub">設定 · cabinet config</div>
+
+    <div class="settings-row">
+      <label for="set-mute">
+        <span class="lbl-jp">音 · SOUND</span>
+        Mute sound
+      </label>
+      <div class="toggle" id="set-mute" role="switch" tabindex="0"></div>
+    </div>
+
+    <div class="settings-row">
+      <label for="set-haptic">
+        <span class="lbl-jp">振動 · HAPTIC</span>
+        Disable vibration
+      </label>
+      <div class="toggle" id="set-haptic" role="switch" tabindex="0"></div>
+    </div>
+
+    <div class="settings-row" style="flex-direction: column; align-items: stretch;">
+      <label for="set-nick" style="padding-right: 0;">
+        <span class="lbl-jp">名前 · NICKNAME</span>
+        Player name (8 char max)
+      </label>
+      <input class="nick-input" id="set-nick" maxlength="8" placeholder="ANON" />
+    </div>
+
+    <div class="settings-close-row">
+      <button class="settings-close-btn" id="set-close">DONE</button>
+    </div>
+  </div>
+</div>
 
 <script>
-  const subjects = [
-    "my neighbor's cat", "my landlord", "a guy at the bus stop",
-    "my dentist", "my pet rock", "a pigeon", "my grandma",
-    "the ghost in my closet", "my barber", "a Ukrainian uber driver",
-    "my therapist", "an emotionally unstable raccoon", "my plumber",
-    "the mailman", "my sleep paralysis demon"
-  ];
+(() => {
+  function lsGetN(k) { return +(localStorage.getItem(k) || 0); }
+  function lsGet(k, f) { const v = localStorage.getItem(k); return v === null ? f : v; }
 
-  const events = [
-    "set my kitchen on fire", "got stuck in an elevator with a mime",
-    "started speaking only in haiku", "joined a cult (briefly)",
-    "won a hot dog eating contest", "was abducted by very polite aliens",
-    "fainted in a Costco", "got bit by a goose",
-    "accidentally married someone in Vegas", "moved to Bulgaria",
-    "developed a sudden allergy to Wi-Fi", "had a spiritual awakening at a Taco Bell",
-    "got hired by the FBI on the spot", "discovered they're my long-lost twin",
-    "is being chased by bees"
-  ];
-
-  const consequences = [
-    "and now I have to sit perfectly still for 6 hours",
-    "and legally I can't talk about it",
-    "and my insurance won't cover anything until Monday",
-    "and the police are involved (it's fine)",
-    "and I need to attend a mandatory seminar on emotional regulation",
-    "and I'm not allowed to be near loud noises",
-    "and my horoscope said I shouldn't leave the house",
-    "and there's a court order involved",
-    "and I'm currently on a juice cleanse out of solidarity",
-    "and honestly I just don't want to explain it again",
-    "and my chakras are completely misaligned",
-    "and the vet said I need to monitor him for swelling"
-  ];
-
-  const workOpeners = [
-    "I can't come in today because", "I'll be late because",
-    "I need to leave early because", "I can't take that meeting because"
-  ];
-  const schoolOpeners = [
-    "I didn't do my homework because", "I missed class because",
-    "I can't make the group project because", "I was late because"
-  ];
-  const dateOpeners = [
-    "I have to cancel our date because", "I'll be 2 hours late because",
-    "We need to reschedule because", "I can't make dinner because"
-  ];
-  const gymOpeners = [
-    "I can't hit the gym today because", "I'm skipping leg day because",
-    "I can't make our workout because", "I'm taking a rest week because"
-  ];
-  const familyOpeners = [
-    "I can't make the family dinner because", "I'll miss Christmas because",
-    "I can't pick you up from the airport because", "I can't babysit because"
-  ];
-
-  const openersByCategory = {
-    work: workOpeners,
-    school: schoolOpeners,
-    date: dateOpeners,
-    gym: gymOpeners,
-    family: familyOpeners
-  };
-
-  const categoryLabels = {
-    work: "Work Excuse",
-    school: "School Excuse",
-    date: "Date Excuse",
-    gym: "Gym Excuse",
-    family: "Family Excuse"
-  };
-
-  let count = 0;
-
-  function pick(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
+  function fmt(n) {
+    if (!n || n <= 0) return '—';
+    return n.toLocaleString('en-US');
   }
-
-  function generate(category) {
-    if (category === 'random') {
-      const keys = Object.keys(openersByCategory);
-      category = keys[Math.floor(Math.random() * keys.length)];
+  function setBest(id, n, suffix='') {
+    const el = document.getElementById(id);
+    if (!n || n <= 0) {
+      el.textContent = '—';
+      el.classList.add('dash');
+    } else {
+      el.textContent = fmt(n) + suffix;
+      el.classList.remove('dash');
     }
-    const opener = pick(openersByCategory[category]);
-    const subject = pick(subjects);
-    const event = pick(events);
-    const consequence = pick(consequences);
-
-    const excuse = `${opener} ${subject} ${event}, ${consequence}.`;
-
-    const excuseEl = document.getElementById('excuse');
-    const categoryEl = document.getElementById('category');
-    excuseEl.textContent = excuse;
-    categoryEl.textContent = categoryLabels[category];
-
-    excuseEl.classList.remove('shake');
-    void excuseEl.offsetWidth;
-    excuseEl.classList.add('shake');
-
-    count++;
-    document.getElementById('counter').textContent = `Excuses generated: ${count}`;
   }
+
+  // ── game catalog ──
+  const GAMES = [
+    { id: 'taphard',  href: 'games/taphard.html',  no: '01', kanji: '強', romaji: 'KYOUDA', katakana: 'タップ・ハード',   name: 'TAP HARD', desc: 'tap orbs · dodge bombs · combos · waves', bestKey: 'taphard_best',  bestSuffix: '',   accent: '--bomb' },
+    { id: 'react',    href: 'games/react.html',    no: '02', kanji: '反', romaji: 'HANSHA', katakana: 'リアクト',         name: 'REACT',    desc: 'wait for green · tap as fast as you can',  bestKey: 'react_best',    bestSuffix: 'ms', accent: '--good' },
+    { id: 'memory',   href: 'games/memory.html',   no: '03', kanji: '記', romaji: 'KIOKU',  katakana: 'メモリー',          name: 'MEMORY',   desc: 'watch the pattern · repeat it · don\'t blink', bestKey: 'memory_best',   bestSuffix: '',   accent: '--slow' },
+    { id: 'snake',    href: 'games/snake.html',    no: '04', kanji: '蛇', romaji: 'HEBI',   katakana: 'スネーク',          name: 'SNAKE',    desc: 'swipe to turn · eat the seed · grow long', bestKey: 'snake_best',    bestSuffix: '',   accent: '--good' },
+    { id: 'tiles',    href: 'games/tiles.html',    no: '05', kanji: '黒', romaji: 'KURO',   katakana: 'タイル',            name: 'TILES',    desc: 'tap the black ones · avoid the white',     bestKey: 'tiles_best',    bestSuffix: '',   accent: '--rare' },
+    { id: 'stack',    href: 'games/stack.html',    no: '06', kanji: '積', romaji: 'TSUMI',  katakana: 'スタック',          name: 'STACK',    desc: 'drop the block · stay aligned · reach the sky', bestKey: 'stack_best',  bestSuffix: '',   accent: '--epic' },
+    { id: 'flappy',   href: 'games/flappy.html',   no: '07', kanji: '鳥', romaji: 'TORI',   katakana: 'フラッピー',         name: 'FLAPPY',   desc: 'tap to flap · don\'t kiss the torii',      bestKey: 'flappy_best',   bestSuffix: '',   accent: '--rare' },
+    { id: 'whack',    href: 'games/whack.html',    no: '08', kanji: '叩', romaji: 'TATAKI', katakana: 'モグラ',            name: 'WHACK',    desc: 'moles pop out · 60 seconds · avoid bombs',  bestKey: 'whack_best',    bestSuffix: '',   accent: '--good' },
+    { id: 'numbers',  href: 'games/numbers.html',  no: '09', kanji: '数', romaji: 'SUUJI',  katakana: '数字',              name: '2048',     desc: 'slide · merge · double · reach 2048',       bestKey: 'numbers_best',  bestSuffix: '',   accent: '--mustard' },
+    { id: 'breakout', href: 'games/breakout.html', no: '10', kanji: '壊', romaji: 'KOWARE', katakana: 'ブレイク',          name: 'BREAKOUT', desc: 'paddle · ball · break the bricks',         bestKey: 'breakout_best', bestSuffix: '',   accent: '--rust' },
+    { id: 'pong',     href: 'games/pong.html',     no: '11', kanji: '球', romaji: 'TAMA',   katakana: 'ピンポン · 2P',     name: 'PONG',     desc: 'two players · one phone · first to 5',     bestKey: 'pong_best',     bestSuffix: '',   accent: '--teal' },
+  ];
+
+  // ── daily-rotating featured pick ──
+  const epochDay = Math.floor(Date.now() / 86400000);
+  const featured = GAMES[epochDay % GAMES.length];
+  const featuredEl = document.getElementById('featured-card');
+  const fBest = lsGetN(featured.bestKey);
+  featuredEl.href = featured.href;
+  featuredEl.innerHTML = `
+    <div class="stub">
+      <div class="no">№ ${featured.no}</div>
+      <div class="glyph">${featured.kanji}</div>
+      <div class="mini">${featured.romaji}</div>
+    </div>
+    <div class="body">
+      <div class="pick-tag">★ TODAY'S PICK · 本日</div>
+      <div class="name-jp">${featured.katakana}</div>
+      <h2 class="name-en">${featured.name}</h2>
+      <div class="desc">${featured.desc}</div>
+      <div class="row2">
+        <div class="price-mini">BEST <span class="v">${fBest > 0 ? fBest + featured.bestSuffix : '—'}</span></div>
+        <span class="play-big">PLAY →</span>
+      </div>
+    </div>
+  `;
+  const fdate = new Date();
+  document.getElementById('featured-date').textContent =
+    `${String(fdate.getFullYear()).slice(-2)}.${String(fdate.getMonth()+1).padStart(2,'0')}.${String(fdate.getDate()).padStart(2,'0')}`;
+
+  // ── tight 3-col grid ──
+  const gridEl = document.getElementById('grid-cabinets');
+  gridEl.innerHTML = GAMES.map(g => {
+    const v = lsGetN(g.bestKey);
+    const isFeatured = g.id === featured.id;
+    return `
+      <a href="${g.href}" class="grid-card ${isFeatured ? 'is-featured' : ''}" style="--card-color: var(${g.accent});">
+        <span class="no">№${g.no}</span>
+        <span class="accent-dot"></span>
+        <div class="glyph">${g.kanji}</div>
+        <div class="name">${g.name}</div>
+        <div class="best">${v > 0 ? '<span class="v">' + v + g.bestSuffix + '</span>' : '—'}</div>
+      </a>
+    `;
+  }).join('') + `
+    <div class="grid-card soon">
+      <span class="no">№12</span>
+      <div class="glyph">？</div>
+      <div class="name">SOON</div>
+      <div class="best">—</div>
+    </div>
+  `;
+
+  const totalRuns =
+    lsGetN('taphard_runs') + lsGetN('react_runs') + lsGetN('memory_runs') +
+    lsGetN('snake_runs') + lsGetN('tiles_runs') + lsGetN('stack_runs') +
+    lsGetN('flappy_runs') + lsGetN('whack_runs') + lsGetN('numbers_runs') +
+    lsGetN('breakout_runs') + lsGetN('pong_runs');
+  document.getElementById('lt-runs').textContent = String(totalRuns).padStart(3, '0');
+
+  const totalTaps = lsGetN('taphard_taps');
+  document.getElementById('lt-taps').textContent = totalTaps.toLocaleString('en-US');
+
+  let achCount = 0;
+  try { achCount = JSON.parse(lsGet('taphard_ach', '[]')).length; } catch(e) {}
+  document.getElementById('lt-ach').textContent =
+    String(achCount).padStart(2, '0') + '/20';
+
+  document.getElementById('lt-yen').textContent = (totalRuns * 10).toLocaleString('en-US');
+
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  document.getElementById('receipt-date').textContent = `${yy}.${mm}.${dd}`;
+
+  // streak
+  const last = lsGet('taphard_last_day', null);
+  if (last) {
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    if (last === today || last === yesterday) {
+      const streak = lsGetN('taphard_streak');
+      if (streak > 0) {
+        document.getElementById('streak-num').textContent = streak;
+        document.getElementById('streak-stamp').classList.remove('hidden');
+      }
+    }
+  }
+
+  // ── settings panel ──
+  const settingsOverlay = document.getElementById('settings-overlay');
+  const settingsBtn = document.getElementById('settings-btn');
+  const setMute = document.getElementById('set-mute');
+  const setHaptic = document.getElementById('set-haptic');
+  const setNick = document.getElementById('set-nick');
+  const setClose = document.getElementById('set-close');
+  const playerNameDisplay = document.getElementById('player-name-display');
+
+  function setToggleVisual(el, key) {
+    el.classList.toggle('on', localStorage.getItem(key) === '1');
+  }
+  function bindToggle(el, key) {
+    setToggleVisual(el, key);
+    const handler = () => {
+      const cur = localStorage.getItem(key) === '1';
+      localStorage.setItem(key, cur ? '0' : '1');
+      setToggleVisual(el, key);
+    };
+    el.addEventListener('click', handler);
+    el.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); handler(); }
+    });
+  }
+  bindToggle(setMute, 'settings_mute');
+  bindToggle(setHaptic, 'settings_haptic_off');
+
+  function refreshPlayerNameDisplay() {
+    const name = (lsGet('player_name', '') || '').toUpperCase();
+    playerNameDisplay.textContent = name ? `${name} · 円 ¥100` : 'NO. 001 / 円 ¥100';
+  }
+  setNick.value = (lsGet('player_name', '') || '').toUpperCase();
+  setNick.addEventListener('input', () => {
+    const v = setNick.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 8).toUpperCase();
+    setNick.value = v;
+    localStorage.setItem('player_name', v);
+    refreshPlayerNameDisplay();
+  });
+  refreshPlayerNameDisplay();
+
+  settingsBtn.addEventListener('click', () => settingsOverlay.classList.add('show'));
+  setClose.addEventListener('click', () => settingsOverlay.classList.remove('show'));
+  settingsOverlay.addEventListener('click', (e) => {
+    if (e.target === settingsOverlay) settingsOverlay.classList.remove('show');
+  });
+})();
 </script>
 </body>
 </html>

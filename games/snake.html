@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#f4ede0" />
+<title>SNAKE · 蛇</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@400;500;700;800&family=Yuji+Boku&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f4ede0;
+    --paper-2: #ece4d1;
+    --paper-3: #e0d5bb;
+    --ink: #1c1a16;
+    --ink-soft: #3a352d;
+    --faded: #8a7e6a;
+    --rust: #c84a1d;
+    --stamp-red: #b32d23;
+    --olive: #6b6a3a;
+    --teal: #2f6a6a;
+    --rule: rgba(28,26,22,0.18);
+    --f-display: 'RocknRoll One', system-ui, sans-serif;
+    --f-mincho: 'Shippori Mincho', serif;
+    --f-jp: 'Noto Sans JP', system-ui, sans-serif;
+    --f-mono: 'JetBrains Mono', monospace;
+    --f-brush: 'Yuji Boku', serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: none; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: var(--paper); color: var(--ink);
+    font-family: var(--f-jp);
+    overscroll-behavior: none;
+  }
+  body { position: fixed; inset: 0; }
+  body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 100; background: repeating-linear-gradient(0deg, rgba(28,26,22,0.04) 0 1px, transparent 1px 3px); mix-blend-mode: multiply; }
+  body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 101; background: radial-gradient(ellipse at center, transparent 55%, rgba(28,26,22,0.18) 100%); }
+
+  #game {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at top, var(--paper) 0%, var(--paper-2) 100%);
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: 70px 16px 16px;
+  }
+
+  .top {
+    position: absolute;
+    top: env(safe-area-inset-top, 14px);
+    left: 0; right: 0;
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .stat { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.22em; color: var(--ink-soft); text-transform: uppercase; }
+  .stat.right { text-align: right; }
+  .stat .v { display: block; font-family: var(--f-mono); font-weight: 700; color: var(--ink); font-size: 1.5rem; letter-spacing: 0; line-height: 1; margin-top: 2px; }
+  .stat .v.score { color: var(--rust); }
+
+  canvas {
+    background: var(--paper-3);
+    border: 1.5px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    max-width: 100%;
+    max-height: 60vh;
+    touch-action: none;
+  }
+
+  .hint {
+    margin-top: 16px;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .hint .kanji { font-family: var(--f-brush); font-size: 14px; margin: 0 6px; color: var(--rust); }
+
+  .overlay {
+    position: absolute; inset: 0;
+    background: var(--paper);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 20; padding: 24px; text-align: center;
+    transition: opacity 0.25s;
+  }
+  .overlay.hidden { opacity: 0; pointer-events: none; }
+  .title-jp { font-family: var(--f-jp); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.32em; color: var(--faded); margin: 0 0 4px; }
+  .title-en {
+    font-family: var(--f-display);
+    font-size: clamp(2.6rem, 12vw, 4rem);
+    line-height: 0.9; color: var(--ink);
+    margin: 0 0 8px; letter-spacing: -0.01em;
+  }
+  .title-en .kanji { font-family: var(--f-brush); color: var(--stamp-red); font-size: 0.8em; margin-left: 0.15em; }
+  .tag-line { font-family: var(--f-mincho); font-style: italic; color: var(--ink-soft); font-size: 0.95rem; margin: 6px 0 24px; max-width: 280px; }
+
+  .btn {
+    background: var(--rust); color: var(--paper); border: none;
+    padding: 12px 36px; font-family: var(--f-display);
+    font-size: 1.1rem; letter-spacing: 0.16em; text-transform: uppercase;
+    box-shadow: 3px 3px 0 var(--ink); cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+  .back-btn {
+    background: var(--paper); color: var(--ink-soft);
+    border: 1px solid var(--ink); padding: 5px 12px;
+    font-family: var(--f-mono); font-size: 10px;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    text-decoration: none; margin-top: 14px;
+    display: inline-block;
+  }
+  .go-receipt {
+    border: 1px solid var(--ink); box-shadow: 3px 3px 0 var(--ink);
+    padding: 14px 18px; margin: 16px 0 20px;
+    background: var(--paper); min-width: 240px;
+  }
+  .go-receipt .row {
+    display: flex; align-items: baseline;
+    font-family: var(--f-mono); font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-soft); line-height: 2;
+  }
+  .go-receipt .leader { flex: 1; border-bottom: 1px dotted var(--rule); margin: 0 8px; transform: translateY(-3px); }
+  .go-receipt .val { font-weight: 700; color: var(--ink); font-size: 14px; }
+  .new-best { color: var(--stamp-red); font-family: var(--f-display); font-size: 12px; letter-spacing: 0.3em; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div id="game">
+  <div class="top">
+    <div class="stat">
+      <span>SCORE · 点</span>
+      <span class="v score" id="score">0</span>
+    </div>
+    <div class="stat right">
+      <span>BEST · 蛇</span>
+      <span class="v" id="best">0</span>
+    </div>
+  </div>
+  <canvas id="board"></canvas>
+  <div class="hint"><span class="kanji">向</span>SWIPE TO TURN</div>
+
+  <div class="overlay" id="start">
+    <div class="title-jp">スネーク · NO. 04</div>
+    <h1 class="title-en">SNAKE<span class="kanji">蛇</span></h1>
+    <div class="tag-line">swipe to turn · eat the seed · grow long · don't bite yourself</div>
+    <button class="btn" id="start-btn">START</button>
+    <a href="../index.html" class="back-btn">← HUB</a>
+  </div>
+
+  <div class="overlay hidden" id="gameover">
+    <div class="title-jp" style="color: var(--stamp-red);">終 · GAME OVER</div>
+    <h1 class="title-en" style="font-size: clamp(2rem, 9vw, 3rem);">FINISHED<span class="kanji">終</span></h1>
+    <div class="new-best hidden" id="new-best">★ NEW BEST</div>
+    <div class="go-receipt">
+      <div class="row"><span>Length</span><span class="leader"></span><span class="val" id="go-score">0</span></div>
+      <div class="row"><span>Best</span><span class="leader"></span><span class="val" id="go-best" style="color: var(--rust);">0</span></div>
+    </div>
+    <button class="btn" id="retry-btn">TRY AGAIN</button>
+    <a href="../index.html" class="back-btn">← HUB</a>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('board');
+  const ctx = canvas.getContext('2d');
+  const scoreEl = document.getElementById('score');
+  const bestEl = document.getElementById('best');
+  const startOverlay = document.getElementById('start');
+  const gameoverOverlay = document.getElementById('gameover');
+  const startBtn = document.getElementById('start-btn');
+  const retryBtn = document.getElementById('retry-btn');
+  const goScoreEl = document.getElementById('go-score');
+  const goBestEl = document.getElementById('go-best');
+  const newBestEl = document.getElementById('new-best');
+
+  const COLS = 17, ROWS = 22;
+  let cellSize = 18;
+  let snake, dir, nextDir, food, score, alive, lastTick, tickInterval;
+
+  function fitCanvas() {
+    const maxW = Math.min(window.innerWidth - 32, 380);
+    const maxH = window.innerHeight * 0.6;
+    const cellW = Math.floor(maxW / COLS);
+    const cellH = Math.floor(maxH / ROWS);
+    cellSize = Math.max(10, Math.min(cellW, cellH));
+    canvas.width = COLS * cellSize;
+    canvas.height = ROWS * cellSize;
+  }
+
+  function audio(freq, duration=0.1, type='sine', vol=0.1) { if(localStorage.getItem("settings_mute")==="1")return;
+    try {
+      const c = audio.ctx || (audio.ctx = new (window.AudioContext || window.webkitAudioContext)());
+      const osc = c.createOscillator(); const gain = c.createGain();
+      osc.type = type; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, c.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
+      osc.connect(gain); gain.connect(c.destination);
+      osc.start(); osc.stop(c.currentTime + duration);
+    } catch(e) {}
+  }
+  function vibrate(ms) { if(localStorage.getItem("settings_haptic_off")==="1")return; if (navigator.vibrate) navigator.vibrate(ms); }
+
+  function placeFood() {
+    while (true) {
+      const f = { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) };
+      if (!snake.some(s => s.x === f.x && s.y === f.y)) { food = f; return; }
+    }
+  }
+
+  function reset() {
+    snake = [{x: Math.floor(COLS/2), y: Math.floor(ROWS/2)}];
+    dir = {x: 1, y: 0}; nextDir = {x: 1, y: 0};
+    score = 0;
+    scoreEl.textContent = 0;
+    bestEl.textContent = +(localStorage.getItem('snake_best') || 0);
+    placeFood();
+    alive = true;
+    tickInterval = 140;
+    lastTick = performance.now();
+  }
+
+  function step() {
+    dir = nextDir;
+    const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+    if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) return gameOver();
+    if (snake.some(s => s.x === head.x && s.y === head.y)) return gameOver();
+    snake.unshift(head);
+    if (head.x === food.x && head.y === food.y) {
+      score++;
+      scoreEl.textContent = score;
+      audio(800, 0.08, 'square', 0.1);
+      vibrate(15);
+      placeFood();
+      tickInterval = Math.max(70, tickInterval - 2);
+    } else snake.pop();
+  }
+
+  function draw() {
+    // paper bg
+    ctx.fillStyle = '#e0d5bb';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // grid lines (subtle ink)
+    ctx.strokeStyle = 'rgba(28,26,22,0.08)';
+    ctx.lineWidth = 1;
+    for (let i = 1; i < COLS; i++) {
+      ctx.beginPath(); ctx.moveTo(i*cellSize, 0); ctx.lineTo(i*cellSize, canvas.height); ctx.stroke();
+    }
+    for (let i = 1; i < ROWS; i++) {
+      ctx.beginPath(); ctx.moveTo(0, i*cellSize); ctx.lineTo(canvas.width, i*cellSize); ctx.stroke();
+    }
+
+    // food (stamp-red ink circle)
+    ctx.fillStyle = '#b32d23';
+    ctx.beginPath();
+    ctx.arc(food.x * cellSize + cellSize/2, food.y * cellSize + cellSize/2, cellSize/2 - 3, 0, Math.PI*2);
+    ctx.fill();
+    // inner ring like a stamp
+    ctx.strokeStyle = '#b32d23';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(food.x * cellSize + cellSize/2, food.y * cellSize + cellSize/2, cellSize/2 - 1, 0, Math.PI*2);
+    ctx.stroke();
+
+    // snake (ink with rust head)
+    snake.forEach((s, i) => {
+      ctx.fillStyle = i === 0 ? '#c84a1d' : '#1c1a16';
+      const x = s.x * cellSize + 1, y = s.y * cellSize + 1, w = cellSize - 2, h = cellSize - 2;
+      ctx.fillRect(x, y, w, h);
+    });
+  }
+
+  function loop(t) {
+    if (!alive) return;
+    if (t - lastTick >= tickInterval) { lastTick = t; step(); }
+    if (alive) draw();
+    requestAnimationFrame(loop);
+  }
+
+  function gameOver() {
+    alive = false;
+    audio(200, 0.3, 'sawtooth', 0.15);
+    setTimeout(() => audio(100, 0.4, 'sawtooth', 0.13), 100);
+    vibrate([80, 60, 120]);
+    const best = +(localStorage.getItem('snake_best') || 0);
+    const isNew = score > best;
+    if (isNew) localStorage.setItem('snake_best', score);
+    goScoreEl.textContent = score;
+    goBestEl.textContent = isNew ? score : best;
+    newBestEl.classList.toggle('hidden', !isNew);
+    setTimeout(() => gameoverOverlay.classList.remove('hidden'), 400);
+    const runs = +(localStorage.getItem('snake_runs') || 0) + 1;
+    localStorage.setItem('snake_runs', runs);
+  }
+
+  function start() {
+    fitCanvas(); reset();
+    startOverlay.classList.add('hidden');
+    gameoverOverlay.classList.add('hidden');
+    requestAnimationFrame(loop);
+  }
+
+  function setDir(x, y) {
+    if (snake.length > 1 && dir.x === -x && dir.y === -y) return;
+    nextDir = {x, y};
+  }
+
+  let touchX = 0, touchY = 0, touching = false;
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const t = e.touches[0];
+    touchX = t.clientX; touchY = t.clientY;
+    touching = true;
+  }, {passive: false});
+  canvas.addEventListener('touchmove', (e) => {
+    if (!touching) return; e.preventDefault();
+    const t = e.touches[0];
+    const dx = t.clientX - touchX, dy = t.clientY - touchY;
+    if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
+      if (Math.abs(dx) > Math.abs(dy)) setDir(dx > 0 ? 1 : -1, 0);
+      else setDir(0, dy > 0 ? 1 : -1);
+      touching = false;
+    }
+  }, {passive: false});
+  canvas.addEventListener('touchend', () => { touching = false; });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowUp' || e.key === 'w') setDir(0, -1);
+    else if (e.key === 'ArrowDown' || e.key === 's') setDir(0, 1);
+    else if (e.key === 'ArrowLeft' || e.key === 'a') setDir(-1, 0);
+    else if (e.key === 'ArrowRight' || e.key === 'd') setDir(1, 0);
+  });
+
+  startBtn.addEventListener('click', start);
+  retryBtn.addEventListener('click', start);
+  window.addEventListener('resize', fitCanvas);
+  bestEl.textContent = +(localStorage.getItem('snake_best') || 0);
+  fitCanvas();
+})();
+</script>
+</body>
+</html>
